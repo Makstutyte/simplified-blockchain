@@ -11,14 +11,27 @@
 #include <algorithm>
 #include <sstream>
 #include <locale>
+#include <cmath>
+#include <time.h>
 
-class Studentas1
+
+class user
 {
   public:
-      std::string vardas;
-      std::string pavarde;
-      int egz; 
+      std::string name;
+      std::string public_key;
+      int balance; 
 };
+
+class transaction
+{
+  public:
+      std::string id;
+      std::string sender;
+      std::string recipient;
+      int sum; 
+};
+
 
 std::string StrRotate(std::string& s, int nLeft)
 {
@@ -121,39 +134,108 @@ std::string hash (std::string& txt)
         return hash;
 };
 
-void I_FAILA_pazymiu_generavimas (Studentas1& Studentas)
-{
-    int galas=0; int kiek1; int ST;  int galas_st=0; int nezinau_kas_vyksta=0;  int kiek = 1;
-    std::string pavadinimas="1000.txt";
+std::random_device rd;
+    std::mt19937::result_type seed = rd() ^ (
+            (std::mt19937::result_type)
+            std::chrono::duration_cast<std::chrono::seconds>(
+                std::chrono::system_clock::now().time_since_epoch()
+                ).count() +
+            (std::mt19937::result_type)
+            std::chrono::duration_cast<std::chrono::microseconds>(
+                std::chrono::high_resolution_clock::now().time_since_epoch()
+                ).count() );
+ 
+    std::mt19937 gen(seed);
 
-    std::ofstream i_faila(pavadinimas);
+void net_users (std::vector<user>& vektoriukas)
+{
     using hrClock = std::chrono::high_resolution_clock;
     std::mt19937 mt(static_cast<long unsigned int>(hrClock::now().time_since_epoch().count()));
     std::uniform_int_distribution<int> dist(100, 1000000);
-    int a=0; std::vector<int> vektoriukas;
 
-    std::ostringstream eilutis ("");
-    eilutis << std::setw(20) << std::left << "VARDAS" << std::setw(21) << "PAVARDE";
-    eilutis << "                                                   Egz.\n";
-    i_faila << eilutis.str();   
+    char key[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
+    std::uniform_int_distribution<unsigned> dist1(0, 15);
+
     std::string txt = "";
+    std::string txt1 = "";
 
     for (int i = 0; i < 1000; i ++) 
     {
-        eilutis.str(""); 
-        eilutis << "Vardas" << std::setw(14) << std::left << i+1;
-        txt = static_cast<std::ostringstream*>( &(std::ostringstream() << i+1) )->str();
-        eilutis <<  hash(txt) << "        ";
-        eilutis << dist(mt);
-        eilutis << "\n";
-        i_faila << eilutis.str();
+        user user1;
+        txt = "Vardas"; 
+        txt1 = static_cast<std::ostringstream*>( &(std::ostringstream() << i+1) )->str();
+        txt.append(txt1); 
+        user1.name = txt;
+
+        for(int j = 0; j < 64; j++)
+        {
+            user1.public_key = user1.public_key + key[dist1(gen)];
+        }
+
+        user1.balance = dist(mt);
+        vektoriukas.push_back(user1);
+
     }
+
+    std::cout << "--------------------------------------------------------------------------------"<< std::endl;
+    for(int i=0; i < vektoriukas.size(); i++)
+        std::cout << std::setw(20) << std::left << vektoriukas[i].name << std::setw(21) << vektoriukas[i].public_key <<"\t\t" << vektoriukas[i].balance << std::endl;
+
+    std::cout << "--------------------------------------------------------------------------------"<< std::endl;
+   // std::uniform_int_distribution<int> dist2(0, 1000);
+
 }
+
+void transactions(std::vector<transaction>& T)
+{
+    std::vector<user> vektoriukas;
+    net_users (vektoriukas); 
+
+	transaction n;
+
+    using hrClock = std::chrono::high_resolution_clock;
+    std::mt19937 mt(static_cast<long unsigned int>(hrClock::now().time_since_epoch().count()));
+    std::uniform_int_distribution<int> dist(0, 39);
+
+	for (int i = 0; i < 5; i++)
+	{
+		int ran, ran1;
+		std::string u1, siuntejas, u3;
+
+		ran = dist(mt);
+		n.sender = vektoriukas[ran].public_key;
+
+        do
+        {
+            ran1 = dist(mt);
+        } while (ran1 == ran);
+
+        n.recipient = vektoriukas[ran1].public_key;
+
+
+        std::cout << std::setw(20) << std::left << << n.sender << std::setw(21) <<  n.recipient << std::endl;
+
+      //  std::uniform_int_distribution<int> dist3(0, 39);
+        
+		n.sum = std::round(1 + (double)rand() / RAND_MAX * (vektoriukas[ran].balance - 1));
+
+		vektoriukas[ran].balance = vektoriukas[ran].balance - n.sum;
+
+
+		T.push_back(n);
+	}
+
+}
+
 
 int main()
 {
-    Studentas1 laikinas;
-    I_FAILA_pazymiu_generavimas (laikinas); 
+    user laikinas;
+    std::vector<user> vektoriukas;
+    std::vector<transaction> T;
+   // net_users (vektoriukas); 
+    transactions(T);
+
 
     return 0;
 
