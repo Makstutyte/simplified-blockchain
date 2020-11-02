@@ -147,7 +147,7 @@ std::random_device rd;
  
     std::mt19937 gen(seed);
 
-void net_users (std::vector<user>& vektoriukas)
+void net_users (std::vector<user>& gen_user)
 {
     using hrClock = std::chrono::high_resolution_clock;
     std::mt19937 mt(static_cast<long unsigned int>(hrClock::now().time_since_epoch().count()));
@@ -173,69 +173,87 @@ void net_users (std::vector<user>& vektoriukas)
         }
 
         user1.balance = dist(mt);
-        vektoriukas.push_back(user1);
+        gen_user.push_back(user1);
 
     }
 
-    std::cout << "--------------------------------------------------------------------------------"<< std::endl;
-    for(int i=0; i < vektoriukas.size(); i++)
-        std::cout << std::setw(20) << std::left << vektoriukas[i].name << std::setw(21) << vektoriukas[i].public_key <<"\t\t" << vektoriukas[i].balance << std::endl;
+  /*  std::cout << "--------------------------------------------------------------------------------"<< std::endl;
+    for(int i=0; i < gen_user.size(); i++)
+        std::cout << std::setw(20) << std::left << gen_user[i].name << std::setw(21) << gen_user[i].public_key <<"\t\t" << gen_user[i].balance << std::endl;
 
-    std::cout << "--------------------------------------------------------------------------------"<< std::endl;
-   // std::uniform_int_distribution<int> dist2(0, 1000);
+    std::cout << "--------------------------------------------------------------------------------"<< std::endl;*/
 
 }
 
 void transactions(std::vector<transaction>& T)
 {
-    std::vector<user> vektoriukas;
-    net_users (vektoriukas); 
+    std::vector<user> gen_user;
+    net_users (gen_user); 
 
 	transaction n;
-
+    int kiek=0;
     using hrClock = std::chrono::high_resolution_clock;
     std::mt19937 mt(static_cast<long unsigned int>(hrClock::now().time_since_epoch().count()));
-    std::uniform_int_distribution<int> dist(0, 39);
+    std::uniform_int_distribution<int> dist(0, 999); 
 
-	for (int i = 0; i < 5; i++)
+	for (int i = 0; i < 10000; i++)
 	{
-		int ran, ran1;
+		int ran, ran1, ran2;
 		std::string u1, siuntejas, u3;
 
 		ran = dist(mt);
-		n.sender = vektoriukas[ran].public_key;
+		n.sender = gen_user[ran].public_key;
 
         do
         {
             ran1 = dist(mt);
         } while (ran1 == ran);
 
-        n.recipient = vektoriukas[ran1].public_key;
+        n.recipient = gen_user[ran1].public_key;
 
+      for(int o = 0; o < 1; o++)
+      { 
+          do
+          {
+                std::uniform_int_distribution<int> dist1(1, ((gen_user[ran].balance - 1)/2)); 
+                n.sum = dist1(mt);
+                //TODO fix balance
+                gen_user[ran].balance = gen_user[ran].balance - n.sum;
+          } while(n.sum<0);
+          
+      }
 
-        std::cout << std::setw(20) << std::left << << n.sender << std::setw(21) <<  n.recipient << std::endl;
+        std::string id, num;
+        id = n.sender + n.recipient;
+        num = static_cast<std::ostringstream*>( &(std::ostringstream() << n.sum) )->str();
+        id.append(num); 
+        n.id = hash(id);
+		
+      //  std::cout << std::setw(20) << std::left << n.sender << "\t\t" <<  n.recipient << "\t\t" << n.sum  << "      < "<<  "\t\t" <<  gen_user[ran].balance << std::endl;
 
-      //  std::uniform_int_distribution<int> dist3(0, 39);
-        
-		n.sum = std::round(1 + (double)rand() / RAND_MAX * (vektoriukas[ran].balance - 1));
-
-		vektoriukas[ran].balance = vektoriukas[ran].balance - n.sum;
-
+        if (n.sum<=0 )
+        kiek++;
+  
 
 		T.push_back(n);
 	}
-
+    
+/*
+      std::cout << "--------------------------------------------------------------------------------"<< std::endl;
+    for(int i=0; i < T.size(); i++)
+        std::cout << std::setw(20) << std::left << T[i].id <<"\t\t" << T[i].sender <<"\t\t" << T[i].recipient<<"\t\t" << T[i].sum << std::endl;
+        std::cout << "ATS ->  ";*/
+        std::cout << kiek << std::endl;
 }
 
 
 int main()
 {
     user laikinas;
-    std::vector<user> vektoriukas;
+    std::vector<user> gen_user;
     std::vector<transaction> T;
-   // net_users (vektoriukas); 
+   // net_users (gen_user); 
     transactions(T);
-
 
     return 0;
 
