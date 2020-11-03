@@ -32,6 +32,39 @@ class transaction
       int sum; 
 };
 
+class block 
+{
+    public:
+    std::string prev_hash;
+    int64_t timestamp;
+    std::string version;
+    std::string merkel_root;
+    int nonce;
+    uint32_t difficulty; // only possitive values
+    std::vector<transaction> data;
+    block* next;
+
+};
+
+/*
+class Block 
+{
+    public:
+    std::string sPrevHash;
+    Block(uint32_t nIndexIn, const std::string &sDataIn);
+    std::string GetHash();
+    void MineBlock(uint32_t nDifficulty);
+
+    private:
+    uint32_t _nIndex;
+    int64_t _nNonce;
+    std::string _sData;
+    std::string _sHash;
+    time_t _tTime;
+    std::string _CalculateHash() const;
+
+};*/
+
 
 std::string StrRotate(std::string& s, int nLeft)
 {
@@ -176,8 +209,7 @@ void net_users (std::vector<user>& gen_user)
         gen_user.push_back(user1);
 
     }
-
-  /*  std::cout << "--------------------------------------------------------------------------------"<< std::endl;
+/*std::cout << "--------------------------------------------------------------------------------"<< std::endl;
     for(int i=0; i < gen_user.size(); i++)
         std::cout << std::setw(20) << std::left << gen_user[i].name << std::setw(21) << gen_user[i].public_key <<"\t\t" << gen_user[i].balance << std::endl;
 
@@ -211,17 +243,17 @@ void transactions(std::vector<transaction>& T)
 
         n.recipient = gen_user[ran1].public_key;
 
-      for(int o = 0; o < 1; o++)
-      { 
-          do
-          {
-                std::uniform_int_distribution<int> dist1(1, ((gen_user[ran].balance - 1)/2)); 
-                n.sum = dist1(mt);
-                //TODO fix balance
-                gen_user[ran].balance = gen_user[ran].balance - n.sum;
-          } while(n.sum<0);
-          
-      }
+            do
+            {
+                    std::uniform_int_distribution<unsigned> dist1(1, gen_user[ran].balance - 1);
+                    n.sum = dist1(gen);
+
+                    // TODO aptvarkyti
+                    gen_user[ran].balance = gen_user[ran].balance - n.sum;
+                    gen_user[ran1].balance = gen_user[ran1].balance + n.sum;
+                    //----------------------
+
+            } while(gen_user[ran].balance<0);
 
         std::string id, num;
         id = n.sender + n.recipient;
@@ -229,9 +261,9 @@ void transactions(std::vector<transaction>& T)
         id.append(num); 
         n.id = hash(id);
 		
-      //  std::cout << std::setw(20) << std::left << n.sender << "\t\t" <<  n.recipient << "\t\t" << n.sum  << "      < "<<  "\t\t" <<  gen_user[ran].balance << std::endl;
+      //  std::cout << std::setw(20) << std::left << n.sender << "\t\t" <<  n.recipient <<  "\t\t" <<  gen_user[ran].balance << " - " << "\t\t" << n.sum  << "\t\t" << " = " << gen_user[ran1].balance << std::endl;
 
-        if (n.sum<=0 )
+        if (gen_user[ran].balance<=0 )
         kiek++;
   
 
@@ -246,6 +278,66 @@ void transactions(std::vector<transaction>& T)
         std::cout << kiek << std::endl;
 }
 
+/*
+class block 
+{
+    public:
+    std::string prev_hash;
+    time_t timestamp;
+    std::string version;
+    std::string merkel_root;
+    int nonce;
+    uint32_t difficulty; // only possitive values
+    block* next;
+
+};*/
+
+void block_generation (std::vector<block>& gen_block, int x)
+{
+    block* b;
+    std::vector<transaction> T;
+    
+    
+    for(int i=0; i < x; i++)
+    {
+        b = new block;
+      
+
+        int64_t time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+
+        b->timestamp = time;
+        b->version = "first";
+      //  b->merkel_root = ;
+        b->nonce = 1;
+        b->difficulty = 2;
+
+        if(i == 0)
+        {
+             b->prev_hash = "first block";
+        }
+
+        else
+        {//nepabaigta
+            std::string previous = "";
+            for(int i=0; i < T.size()/100; i++)
+            {
+                    std::string tarpinis = "";
+                    std::string num;
+                    tarpinis =  T[i].id + T[i].sender + T[i].recipient;
+                    num = static_cast<std::ostringstream*>( &(std::ostringstream() << T[i].sum) )->str();
+                    tarpinis.append(num);
+                    hash(tarpinis);
+
+
+
+            }
+
+            //b->prev_hash = hash()
+        }
+        // b->data = transactions(T);
+    }
+
+}
 
 int main()
 {
