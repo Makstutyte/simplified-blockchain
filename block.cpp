@@ -46,25 +46,6 @@ class block
 
 };
 
-/*
-class Block 
-{
-    public:
-    std::string sPrevHash;
-    Block(uint32_t nIndexIn, const std::string &sDataIn);
-    std::string GetHash();
-    void MineBlock(uint32_t nDifficulty);
-
-    private:
-    uint32_t _nIndex;
-    int64_t _nNonce;
-    std::string _sData;
-    std::string _sHash;
-    time_t _tTime;
-    std::string _CalculateHash() const;
-
-};*/
-
 
 std::string StrRotate(std::string& s, int nLeft)
 {
@@ -278,19 +259,6 @@ void transactions(std::vector<transaction>& T)
         std::cout << kiek << std::endl;
 }
 
-/*
-class block 
-{
-    public:
-    std::string prev_hash;
-    time_t timestamp;
-    std::string version;
-    std::string merkel_root;
-    int nonce;
-    uint32_t difficulty; // only possitive values
-    block* next;
-
-};*/
 
 void block_generation (std::vector<block>& gen_block, int x)
 {
