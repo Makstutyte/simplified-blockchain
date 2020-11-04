@@ -172,7 +172,7 @@ void net_users (std::vector<user>& gen_user)
     std::string txt = "";
     std::string txt1 = "";
 
-    for (int i = 0; i < 10; i ++) 
+    for (int i = 0; i < 1000; i ++) 
     {
         user user1;
         txt = "Vardas"; 
@@ -202,9 +202,9 @@ std::vector<transaction> transactions()
     int kiek=0;
     using hrClock = std::chrono::high_resolution_clock;
     std::mt19937 mt(static_cast<long unsigned int>(hrClock::now().time_since_epoch().count()));
-    std::uniform_int_distribution<int> dist(0, 9); 
+    std::uniform_int_distribution<int> dist(0, 999); 
 
-	for (int i = 0; i < 5; i++)
+	for (int i = 0; i < 10000; i++)
 	{
 		int ran, ran1, ran2;
 		std::string u1, siuntejas, u3;
@@ -255,7 +255,7 @@ std::vector<transaction> transactions()
 
 std::vector<transaction> slicing(std::vector<transaction>& arr) 
 { 
-    int X = 0, Y = 2; 
+    int X = 0, Y = 99; 
     auto start = arr.begin() + X; 
     auto end = arr.begin() + Y + 1; 
   
@@ -272,11 +272,10 @@ void block_generation (int x)
     block* b;
     std::vector<transaction> T;
     T = transactions();
-    std::vector<transaction> T_data; 
-    
-    
+   
     for(int i=0; i < x; i++)
-    {
+    { 
+        std::vector<transaction> T_data; 
         b = new block;
       
         int64_t time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
@@ -288,15 +287,28 @@ void block_generation (int x)
         b->difficulty = 2;
         std::string next = "";
         std::string next1 = "";
+
+        
         if(i == 0)
         {
              b->prev_hash = "0";
              T_data = slicing(T); 
              b->data = T_data;
 
+             std::string time_int, stringis, nonciukas, diff;
+             stringis = b->version + b->prev_hash;
+             time_int = static_cast<std::ostringstream*>( &(std::ostringstream() << b->timestamp) )->str();
+             nonciukas = static_cast<std::ostringstream*>( &(std::ostringstream() << b->nonce) )->str();
+             diff = static_cast<std::ostringstream*>( &(std::ostringstream() << b->difficulty) )->str();
+
+             stringis.append(time_int);
+             stringis.append(nonciukas);
+             stringis.append(diff); 
+
+             next1 = stringis;
+
             for(int i=0; i < 100; i++)
             {
-                    next1 = T[i].id;
                     T.erase(T.begin());
             }
         }
@@ -304,7 +316,20 @@ void block_generation (int x)
         else
         {
             std::string previous = "";
-            //b->data = T_data;
+            T_data = slicing(T); 
+            b->data = T_data;
+
+            std::string time_int, stringis, nonciukas, diff;
+            stringis = b->version + b->prev_hash;
+            time_int = static_cast<std::ostringstream*>( &(std::ostringstream() << b->timestamp) )->str();
+            nonciukas = static_cast<std::ostringstream*>( &(std::ostringstream() << b->nonce) )->str();
+            diff = static_cast<std::ostringstream*>( &(std::ostringstream() << b->difficulty) )->str();
+
+            stringis.append(time_int);
+            stringis.append(nonciukas);
+            stringis.append(diff); 
+
+             next = stringis;
 
             for(int i=0; i < 100; i++)
             {
@@ -315,12 +340,10 @@ void block_generation (int x)
                     num = static_cast<std::ostringstream*>( &(std::ostringstream() << T[i].sum) )->str();
                     tarpinis.append(num);
 */
-                    next = T[i].id;
-                    b->data = transactions();
                     T.erase(T.begin());
             }
         } 
-
+//*****************************************
         if(i == 1)
         {
             b->prev_hash = hash(next1);
@@ -330,13 +353,13 @@ void block_generation (int x)
         {
             b->prev_hash = hash(next);
         }
-
+//*****************************************
      std::cout << i << " blokas" << std::endl;
 
     }
 
 }
-
+ 
 void printResult(std::vector<transaction>& T) 
 { 
        std::cout << "--------------------------------------------------------------------------------"<< std::endl;
@@ -345,22 +368,10 @@ void printResult(std::vector<transaction>& T)
 
 } 
 
-
 int main()
 {
-    int x;
-  //  block_generation(x);
-  std::vector<transaction> labas;
-  labas = transactions();
-
-    std::vector<transaction> ans; 
-    ans = slicing(labas); 
-  
-    // Print the sliced vector 
-    printResult(ans); 
-
-std::cout << labas.size() ;
-    std::cout << ans.size() ;
+    int x=1;
+    block_generation(x);
 
     return 0;
 
