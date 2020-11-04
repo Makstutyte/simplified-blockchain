@@ -46,7 +46,6 @@ class block
 
 };
 
-
 std::string StrRotate(std::string& s, int nLeft)
 {
     int size = s.size();
@@ -173,7 +172,7 @@ void net_users (std::vector<user>& gen_user)
     std::string txt = "";
     std::string txt1 = "";
 
-    for (int i = 0; i < 1000; i ++) 
+    for (int i = 0; i < 10; i ++) 
     {
         user user1;
         txt = "Vardas"; 
@@ -190,26 +189,22 @@ void net_users (std::vector<user>& gen_user)
         gen_user.push_back(user1);
 
     }
-/*std::cout << "--------------------------------------------------------------------------------"<< std::endl;
-    for(int i=0; i < gen_user.size(); i++)
-        std::cout << std::setw(20) << std::left << gen_user[i].name << std::setw(21) << gen_user[i].public_key <<"\t\t" << gen_user[i].balance << std::endl;
-
-    std::cout << "--------------------------------------------------------------------------------"<< std::endl;*/
 
 }
 
-void transactions(std::vector<transaction>& T)
+std::vector<transaction> transactions()
 {
     std::vector<user> gen_user;
     net_users (gen_user); 
+    std::vector<transaction> T;
 
 	transaction n;
     int kiek=0;
     using hrClock = std::chrono::high_resolution_clock;
     std::mt19937 mt(static_cast<long unsigned int>(hrClock::now().time_since_epoch().count()));
-    std::uniform_int_distribution<int> dist(0, 999); 
+    std::uniform_int_distribution<int> dist(0, 9); 
 
-	for (int i = 0; i < 10000; i++)
+	for (int i = 0; i < 5; i++)
 	{
 		int ran, ran1, ran2;
 		std::string u1, siuntejas, u3;
@@ -242,35 +237,48 @@ void transactions(std::vector<transaction>& T)
         id.append(num); 
         n.id = hash(id);
 		
-      //  std::cout << std::setw(20) << std::left << n.sender << "\t\t" <<  n.recipient <<  "\t\t" <<  gen_user[ran].balance << " - " << "\t\t" << n.sum  << "\t\t" << " = " << gen_user[ran1].balance << std::endl;
-
         if (gen_user[ran].balance<=0 )
         kiek++;
-  
 
 		T.push_back(n);
 	}
     
-/*
+
       std::cout << "--------------------------------------------------------------------------------"<< std::endl;
     for(int i=0; i < T.size(); i++)
         std::cout << std::setw(20) << std::left << T[i].id <<"\t\t" << T[i].sender <<"\t\t" << T[i].recipient<<"\t\t" << T[i].sum << std::endl;
-        std::cout << "ATS ->  ";*/
+        std::cout << "ATS ->  ";
         std::cout << kiek << std::endl;
+
+        return T;
 }
 
+std::vector<transaction> slicing(std::vector<transaction>& arr) 
+{ 
+    int X = 0, Y = 2; 
+    auto start = arr.begin() + X; 
+    auto end = arr.begin() + Y + 1; 
+  
+    std::vector<transaction> result(Y - X + 1); 
+  
+    copy(start, end, result.begin()); 
+  
+    return result; 
+} 
 
-void block_generation (std::vector<block>& gen_block, int x)
+
+void block_generation (int x)
 {
     block* b;
     std::vector<transaction> T;
+    T = transactions();
+    std::vector<transaction> T_data; 
     
     
     for(int i=0; i < x; i++)
     {
         b = new block;
       
-
         int64_t time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 
         b->timestamp = time;
@@ -278,42 +286,81 @@ void block_generation (std::vector<block>& gen_block, int x)
       //  b->merkel_root = ;
         b->nonce = 1;
         b->difficulty = 2;
-
+        std::string next = "";
+        std::string next1 = "";
         if(i == 0)
         {
-             b->prev_hash = "first block";
-        }
+             b->prev_hash = "0";
+             T_data = slicing(T); 
+             b->data = T_data;
 
-        else
-        {//nepabaigta
-            std::string previous = "";
-            for(int i=0; i < T.size()/100; i++)
+            for(int i=0; i < 100; i++)
             {
+                    next1 = T[i].id;
+                    T.erase(T.begin());
+            }
+        }
+// cia dar nepabaigta su transakciju kisimu i bloka
+        else
+        {
+            std::string previous = "";
+            //b->data = T_data;
+
+            for(int i=0; i < 100; i++)
+            {
+/*
                     std::string tarpinis = "";
                     std::string num;
                     tarpinis =  T[i].id + T[i].sender + T[i].recipient;
                     num = static_cast<std::ostringstream*>( &(std::ostringstream() << T[i].sum) )->str();
                     tarpinis.append(num);
-                    hash(tarpinis);
-
-
-
+*/
+                    next = T[i].id;
+                    b->data = transactions();
+                    T.erase(T.begin());
             }
+        } 
 
-            //b->prev_hash = hash()
+        if(i == 1)
+        {
+            b->prev_hash = hash(next1);
         }
-        // b->data = transactions(T);
+
+        else
+        {
+            b->prev_hash = hash(next);
+        }
+
+     std::cout << i << " blokas" << std::endl;
+
     }
 
 }
 
+void printResult(std::vector<transaction>& T) 
+{ 
+       std::cout << "--------------------------------------------------------------------------------"<< std::endl;
+      for(int i=0; i < T.size(); i++)
+        std::cout << std::setw(20) << std::left << T[i].id <<"\t\t" << T[i].sender <<"\t\t" << T[i].recipient<<"\t\t" << T[i].sum << std::endl;
+
+} 
+
+
 int main()
 {
-    user laikinas;
-    std::vector<user> gen_user;
-    std::vector<transaction> T;
-   // net_users (gen_user); 
-    transactions(T);
+    int x;
+  //  block_generation(x);
+  std::vector<transaction> labas;
+  labas = transactions();
+
+    std::vector<transaction> ans; 
+    ans = slicing(labas); 
+  
+    // Print the sliced vector 
+    printResult(ans); 
+
+std::cout << labas.size() ;
+    std::cout << ans.size() ;
 
     return 0;
 
