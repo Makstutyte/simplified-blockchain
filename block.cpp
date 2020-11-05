@@ -37,7 +37,7 @@ class block
     std::string prev_hash;
     int64_t timestamp;
     std::string version;
-    std::string merkel_root;
+    std::string merkle_root;
     int nonce;
     uint32_t difficulty; // only possitive values
     std::vector<transaction> data;
@@ -264,10 +264,32 @@ std::vector<transaction> slicing(std::vector<transaction>& arr)
     return result; 
 } 
 
+std::string block_mining(uint32_t difficulty, std::string next, int& Nonce) 
+{
+    std::string ats;
+    Nonce = -1;
+    char diff_target[difficulty + 1];
+    for (int i = 0; i < difficulty; ++i) 
+    {
+         diff_target[i] = '0';
+    }
+    diff_target[difficulty] = '\0';
+
+   std::string str(diff_target);
+
+    do {
+            Nonce++;
+            ats = hash(next);
+       } while (ats.substr(0, difficulty) != str);
+
+    std::cout << "Block mined: " << ats << std::endl;
+    return ats;
+}
+
 block* block_generation (block* head, int& i, std::vector<transaction>& T)
 {
     block* b;
-   
+        int Nonce = -1;
         std::vector<transaction> T_data; 
         b = new block;
       
@@ -275,31 +297,31 @@ block* block_generation (block* head, int& i, std::vector<transaction>& T)
 
         b->timestamp = time;
         b->version = "first";
-      //  b->merkel_root = ;
-        b->nonce = 1;
+        b->nonce = Nonce;
         b->difficulty = 2;
         std::string next = "";
         std::string next1 = "";
 
-        
         if(i == 0)
         {
              b->prev_hash = "0";
              T_data = slicing(T); 
              b->data = T_data;
-/*
-             std::string time_int, stringis, nonciukas, diff;
-             stringis = b->version + b->prev_hash;
-             time_int = static_cast<std::ostringstream*>( &(std::ostringstream() << b->timestamp) )->str();
-             nonciukas = static_cast<std::ostringstream*>( &(std::ostringstream() << b->nonce) )->str();
-             diff = static_cast<std::ostringstream*>( &(std::ostringstream() << b->difficulty) )->str();
 
-             stringis.append(time_int);
-             stringis.append(nonciukas);
-             stringis.append(diff); 
+            std::string previous = "";
+            for(int i=0; i < 100; i++)
+            {
+                    std::string tarpinis = "";
+                    std::string a = "";
+                    std::string num;
+                    tarpinis =  T_data[i].id + T_data[i].sender + T_data[i].recipient;
+                    num = static_cast<std::ostringstream*>( &(std::ostringstream() << T_data[i].sum) )->str();
+                    tarpinis.append(num);
+                    a = hash(tarpinis);
+                    previous += a;
+            }
 
-             next1 = stringis;
-*/
+            b->merkle_root = hash(previous); //  paimti visų į naują bloką dedamų transakcijų hash'ą.
 
             for(int i=0; i < 100; i++)
             {
@@ -309,30 +331,45 @@ block* block_generation (block* head, int& i, std::vector<transaction>& T)
 
         else
         {
-            std::string previous = "";
+           //std::string previous = "";
             T_data = slicing(T); 
             b->data = T_data;
 
-            std::string time_int, stringis, nonciukas, diff;
-            stringis = head->version + head->prev_hash;
-            time_int = static_cast<std::ostringstream*>( &(std::ostringstream() << head->timestamp) )->str();
-            nonciukas = static_cast<std::ostringstream*>( &(std::ostringstream() << head->nonce) )->str();
-            diff = static_cast<std::ostringstream*>( &(std::ostringstream() << head->difficulty) )->str();
+            std::string previous = "";
+            for(int i=0; i < 100; i++)
+            {
+                    std::string tarpinis = "";
+                    std::string a = "";
+                    std::string num;
+                    tarpinis =  T_data[i].id + T_data[i].sender + T_data[i].recipient;
+                    num = static_cast<std::ostringstream*>( &(std::ostringstream() << T_data[i].sum) )->str();
+                    tarpinis.append(num);
+                    a = hash(tarpinis);
+                    previous += a;
+            }
 
-            stringis.append(time_int);
-            stringis.append(nonciukas);
-            stringis.append(diff); 
-
-            next = stringis;
+            b->merkle_root = hash(previous); //  paimti visų į naują bloką dedamų transakcijų hash'ą.
 
             for(int i=0; i < 100; i++)
             {
                     T.erase(T.begin());
             }
 
-            b->prev_hash = hash(next);
+            std::string time_int, stringis, nonciukas, diff, merkleris;
+            stringis = head->version + head->prev_hash;
+            time_int = static_cast<std::ostringstream*>( &(std::ostringstream() << head->timestamp) )->str();
+            nonciukas = static_cast<std::ostringstream*>( &(std::ostringstream() << head->nonce) )->str();
+            diff = static_cast<std::ostringstream*>( &(std::ostringstream() << head->difficulty) )->str();
+            merkleris = static_cast<std::ostringstream*>( &(std::ostringstream() << head->merkle_root) )->str();
 
-        } 
+            stringis.append(time_int);
+            stringis.append(nonciukas);
+            stringis.append(diff); 
+            stringis.append(merkleris);
+
+            next = stringis;
+            b->prev_hash = block_mining(b->difficulty, next, Nonce); //sita reik keisti
+        } // 
 
          b->next = head;
          head = b;
@@ -352,10 +389,9 @@ void printList(block* head)
 {
   for ( ; head; head = head->next )
   {
-    std::cout << head->prev_hash << "\t" << head->timestamp << "\t" << head->version << "\t" << head->nonce << "\t" << head->difficulty  << std::endl;
+    std::cout << head->prev_hash << "\t" << head->timestamp << "\t" << head->version << "\t" << head->nonce << "\t" << head->difficulty << "\t" << head->merkle_root    << std::endl;
   }
 }
-
 
 //<< "\t" << tmp->data
 int main()
@@ -382,4 +418,6 @@ int main()
     return 0;
 
 }
+
+
 
