@@ -45,6 +45,20 @@ class block
 
 };
 
+class Timer 
+{
+    private:
+    std::chrono::time_point<std::chrono::high_resolution_clock> start;
+    public:
+    Timer() : start{std::chrono::high_resolution_clock::now()} {}
+    void reset() {
+    start = std::chrono::high_resolution_clock::now();
+    }
+    double elapsed() const {
+    return std::chrono::duration<double>
+    (std::chrono::high_resolution_clock::now() - start).count();
+    }
+};
 
 std::string StrRotate(std::string& s, int nLeft)
 {
@@ -172,7 +186,7 @@ void net_users (std::vector<user>& gen_user)
     std::string txt = "";
     std::string txt1 = "";
 
-    for (int i = 0; i < 100; i ++) 
+    for (int i = 0; i < 1000; i ++) 
     {
         user user1;
         txt = "Vardas"; 
@@ -201,9 +215,9 @@ std::vector<transaction> transactions()
     int kiek=0;
     using hrClock = std::chrono::high_resolution_clock;
     std::mt19937 mt(static_cast<long unsigned int>(hrClock::now().time_since_epoch().count()));
-    std::uniform_int_distribution<int> dist(0, 99); 
+    std::uniform_int_distribution<int> dist(0, 999); 
 
-	for (int i = 0; i < 300; i++)
+	for (int i = 0; i < 10000; i++)
 	{
 		int ran, ran1, ran2;
 		std::string u1, siuntejas, u3;
@@ -241,12 +255,12 @@ std::vector<transaction> transactions()
 
 		T.push_back(n);
 	}
-
+/*
       std::cout << "--------------------------------------------------------------------------------"<< std::endl;
     for(int i=0; i < T.size(); i++)
         std::cout << std::setw(20) << std::left << T[i].id <<"\t\t" << T[i].sender <<"\t\t" << T[i].recipient<<"\t\t" << T[i].sum << std::endl;
         std::cout << "ATS ->  ";
-        std::cout << kiek << std::endl;
+        std::cout << kiek << std::endl;*/
 
         return T;
 }
@@ -301,6 +315,7 @@ block* block_generation (block* head, int& i, std::vector<transaction>& T)
         b->difficulty = 2;
         std::string next = "";
         std::string next1 = "";
+        std::string ats = "";
 
         if(i == 0)
         {
@@ -311,14 +326,7 @@ block* block_generation (block* head, int& i, std::vector<transaction>& T)
             std::string previous = "";
             for(int i=0; i < 100; i++)
             {
-                    std::string tarpinis = "";
-                    std::string a = "";
-                    std::string num;
-                    tarpinis =  T_data[i].id + T_data[i].sender + T_data[i].recipient;
-                    num = static_cast<std::ostringstream*>( &(std::ostringstream() << T_data[i].sum) )->str();
-                    tarpinis.append(num);
-                    a = hash(tarpinis);
-                    previous += a;
+                previous = previous + T_data[i].id;
             }
 
             b->merkle_root = hash(previous); //  paimti visų į naują bloką dedamų transakcijų hash'ą.
@@ -331,21 +339,13 @@ block* block_generation (block* head, int& i, std::vector<transaction>& T)
 
         else
         {
-           //std::string previous = "";
             T_data = slicing(T); 
             b->data = T_data;
 
             std::string previous = "";
             for(int i=0; i < 100; i++)
             {
-                    std::string tarpinis = "";
-                    std::string a = "";
-                    std::string num;
-                    tarpinis =  T_data[i].id + T_data[i].sender + T_data[i].recipient;
-                    num = static_cast<std::ostringstream*>( &(std::ostringstream() << T_data[i].sum) )->str();
-                    tarpinis.append(num);
-                    a = hash(tarpinis);
-                    previous += a;
+                 previous = previous + T_data[i].id;
             }
 
             b->merkle_root = hash(previous); //  paimti visų į naują bloką dedamų transakcijų hash'ą.
@@ -366,10 +366,11 @@ block* block_generation (block* head, int& i, std::vector<transaction>& T)
             stringis.append(nonciukas);
             stringis.append(diff); 
             stringis.append(merkleris);
-
+//std::cout << "as jau cia" << std::endl;
             next = stringis;
-            b->prev_hash = block_mining(b->difficulty, next, Nonce); //sita reik keisti
-        } // 
+            //ats = block_mining(2, next, Nonce); //sita reik keisti
+            b->prev_hash = hash(next); 
+        } 
 
          b->next = head;
          head = b;
@@ -393,12 +394,12 @@ void printList(block* head)
   }
 }
 
-//<< "\t" << tmp->data
 int main()
 {
+    Timer t; // Paleisti
     block* head = NULL;
 
-    int x = 3;
+    int x = 10;
 
     std::vector<transaction> T;
     T = transactions();
@@ -406,18 +407,18 @@ int main()
     for (int i = 0; i < x; i++ )
     {
         head = block_generation(head, i, T);
-
-        std::cout <<  std::endl;
     }
 
   std::cout << "LIST: " << std::endl;
   std::cout << std::endl;
 
    printList(head);
+    std::cout <<  t.elapsed() << " s\n";
 
     return 0;
 
 }
+
 
 
 
