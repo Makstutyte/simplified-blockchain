@@ -14,7 +14,6 @@
 #include <cmath>
 #include <time.h>
 
-
 class user
 {
   public:
@@ -189,7 +188,6 @@ void net_users (std::vector<user>& gen_user)
         gen_user.push_back(user1);
 
     }
-
 }
 
 std::vector<transaction> transactions()
@@ -242,7 +240,6 @@ std::vector<transaction> transactions()
 
 		T.push_back(n);
 	}
-    
 
       std::cout << "--------------------------------------------------------------------------------"<< std::endl;
     for(int i=0; i < T.size(); i++)
@@ -312,7 +309,7 @@ void block_generation (int x)
                     T.erase(T.begin());
             }
         }
-// cia dar nepabaigta su transakciju kisimu i bloka
+
         else
         {
             std::string previous = "";
@@ -333,17 +330,10 @@ void block_generation (int x)
 
             for(int i=0; i < 100; i++)
             {
-/*
-                    std::string tarpinis = "";
-                    std::string num;
-                    tarpinis =  T[i].id + T[i].sender + T[i].recipient;
-                    num = static_cast<std::ostringstream*>( &(std::ostringstream() << T[i].sum) )->str();
-                    tarpinis.append(num);
-*/
                     T.erase(T.begin());
             }
         } 
-//*****************************************
+
         if(i == 1)
         {
             b->prev_hash = hash(next1);
@@ -353,13 +343,12 @@ void block_generation (int x)
         {
             b->prev_hash = hash(next);
         }
-//*****************************************
+
      std::cout << i << " blokas" << std::endl;
 
     }
-
 }
- 
+
 void printResult(std::vector<transaction>& T) 
 { 
        std::cout << "--------------------------------------------------------------------------------"<< std::endl;
