@@ -45,6 +45,7 @@ class block
 
 };
 
+
 std::string StrRotate(std::string& s, int nLeft)
 {
     int size = s.size();
@@ -171,7 +172,7 @@ void net_users (std::vector<user>& gen_user)
     std::string txt = "";
     std::string txt1 = "";
 
-    for (int i = 0; i < 1000; i ++) 
+    for (int i = 0; i < 100; i ++) 
     {
         user user1;
         txt = "Vardas"; 
@@ -200,9 +201,9 @@ std::vector<transaction> transactions()
     int kiek=0;
     using hrClock = std::chrono::high_resolution_clock;
     std::mt19937 mt(static_cast<long unsigned int>(hrClock::now().time_since_epoch().count()));
-    std::uniform_int_distribution<int> dist(0, 999); 
+    std::uniform_int_distribution<int> dist(0, 99); 
 
-	for (int i = 0; i < 10000; i++)
+	for (int i = 0; i < 300; i++)
 	{
 		int ran, ran1, ran2;
 		std::string u1, siuntejas, u3;
@@ -263,15 +264,10 @@ std::vector<transaction> slicing(std::vector<transaction>& arr)
     return result; 
 } 
 
-
-void block_generation (int x)
+block* block_generation (block* head, int& i, std::vector<transaction>& T)
 {
     block* b;
-    std::vector<transaction> T;
-    T = transactions();
    
-    for(int i=0; i < x; i++)
-    { 
         std::vector<transaction> T_data; 
         b = new block;
       
@@ -291,7 +287,7 @@ void block_generation (int x)
              b->prev_hash = "0";
              T_data = slicing(T); 
              b->data = T_data;
-
+/*
              std::string time_int, stringis, nonciukas, diff;
              stringis = b->version + b->prev_hash;
              time_int = static_cast<std::ostringstream*>( &(std::ostringstream() << b->timestamp) )->str();
@@ -303,6 +299,7 @@ void block_generation (int x)
              stringis.append(diff); 
 
              next1 = stringis;
+*/
 
             for(int i=0; i < 100; i++)
             {
@@ -317,36 +314,30 @@ void block_generation (int x)
             b->data = T_data;
 
             std::string time_int, stringis, nonciukas, diff;
-            stringis = b->version + b->prev_hash;
-            time_int = static_cast<std::ostringstream*>( &(std::ostringstream() << b->timestamp) )->str();
-            nonciukas = static_cast<std::ostringstream*>( &(std::ostringstream() << b->nonce) )->str();
-            diff = static_cast<std::ostringstream*>( &(std::ostringstream() << b->difficulty) )->str();
+            stringis = head->version + head->prev_hash;
+            time_int = static_cast<std::ostringstream*>( &(std::ostringstream() << head->timestamp) )->str();
+            nonciukas = static_cast<std::ostringstream*>( &(std::ostringstream() << head->nonce) )->str();
+            diff = static_cast<std::ostringstream*>( &(std::ostringstream() << head->difficulty) )->str();
 
             stringis.append(time_int);
             stringis.append(nonciukas);
             stringis.append(diff); 
 
-             next = stringis;
+            next = stringis;
 
             for(int i=0; i < 100; i++)
             {
                     T.erase(T.begin());
             }
+
+            b->prev_hash = hash(next);
+
         } 
 
-        if(i == 1)
-        {
-            b->prev_hash = hash(next1);
-        }
+         b->next = head;
+         head = b;
 
-        else
-        {
-            b->prev_hash = hash(next);
-        }
-
-     std::cout << i << " blokas" << std::endl;
-
-    }
+         return head;
 }
 
 void printResult(std::vector<transaction>& T) 
@@ -357,11 +348,38 @@ void printResult(std::vector<transaction>& T)
 
 } 
 
+void printList(block* head)
+{
+  for ( ; head; head = head->next )
+  {
+    std::cout << head->prev_hash << "\t" << head->timestamp << "\t" << head->version << "\t" << head->nonce << "\t" << head->difficulty  << std::endl;
+  }
+}
+
+
+//<< "\t" << tmp->data
 int main()
 {
-    int x=1;
-    block_generation(x);
+    block* head = NULL;
+
+    int x = 3;
+
+    std::vector<transaction> T;
+    T = transactions();
+
+    for (int i = 0; i < x; i++ )
+    {
+        head = block_generation(head, i, T);
+
+        std::cout <<  std::endl;
+    }
+
+  std::cout << "LIST: " << std::endl;
+  std::cout << std::endl;
+
+   printList(head);
 
     return 0;
 
 }
+
