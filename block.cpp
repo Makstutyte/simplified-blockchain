@@ -37,9 +37,9 @@ class block
     std::string prev_hash;
     int64_t timestamp;
     std::string version;
-    std::string merkle_root;
+    std::string merkel_root;
     int nonce;
-    uint32_t difficulty; // only possitive values
+    int difficulty;
     std::vector<transaction> data;
     block* next;
 
@@ -103,7 +103,7 @@ bool is_hex(char text)
     return true;
 }
 
-std::string hash (std::string& txt)
+std::string hash (std::string const& txt)
 {
     int lenght  = 64;
     std::string default_str =   "gets is considered unsafeand has been removed from the latest Ca";
@@ -255,13 +255,6 @@ std::vector<transaction> transactions()
 
 		T.push_back(n);
 	}
-/*
-      std::cout << "--------------------------------------------------------------------------------"<< std::endl;
-    for(int i=0; i < T.size(); i++)
-        std::cout << std::setw(20) << std::left << T[i].id <<"\t\t" << T[i].sender <<"\t\t" << T[i].recipient<<"\t\t" << T[i].sum << std::endl;
-        std::cout << "ATS ->  ";
-        std::cout << kiek << std::endl;*/
-
         return T;
 }
 
@@ -300,124 +293,160 @@ std::string block_mining(uint32_t difficulty, std::string next, int& Nonce)
     return ats;
 }
 
-block* block_generation (block* head, int& i, std::vector<transaction>& T)
+void block_generation(block* &b, std::vector<transaction> &T, int x)
 {
-    block* b;
-        int Nonce = -1;
-        std::vector<transaction> T_data; 
-        b = new block;
-      
-        int64_t time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    if(!b)
+    {
+            b = new block;
 
+        int64_t time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
         b->timestamp = time;
         b->version = "first";
-        b->nonce = Nonce;
-        b->difficulty = 2;
-        std::string next = "";
-        std::string next1 = "";
-        std::string ats = "";
+        b->difficulty = x;
+        b->nonce = 0;
 
-        if(i == 0)
-        {
-             b->prev_hash = "0";
-             T_data = slicing(T); 
-             b->data = T_data;
-
-            std::string previous = "";
-            for(int i=0; i < 100; i++)
-            {
-                previous = previous + T_data[i].id;
-            }
-
-            b->merkle_root = hash(previous); //  paimti visų į naują bloką dedamų transakcijų hash'ą.
+        auto start = T.begin(); 
+        auto end = T.begin() + 100; 
+    
+        std::vector<transaction> Tran(100); 
+        //std::vector<transaction> T_data;  //ILGIAU UZTRUNKA
+        //T_data = slicing(T); 
+       // b->data = T_data;
+    
+        copy(start, end, Tran.begin()); 
 
             for(int i=0; i < 100; i++)
             {
                     T.erase(T.begin());
             }
+
+        b->data = Tran;
+
+        std::string stringtohash = "";
+        for(int i = 0; i < 100; i++)
+        {
+            stringtohash += b->data[i].id;
+        }                           
+
+        b->merkel_root = hash(stringtohash);
+        b->prev_hash = "0";
+        b->next = NULL;
+    }
+
+    else
+    {
+        block *t = b;
+        int n = 0;
+        while(t->next)
+        {
+            t = t->next;
+            n++;
+        }
+        t->next = new block;
+        t = t->next;
+        block *prev = b;
+        int i = 0;
+        while(i < n)
+        {
+            prev = prev->next;
+            i++;
         }
 
-        else
-        {
-            T_data = slicing(T); 
-            b->data = T_data;
+        int64_t time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+        t->timestamp = time;
+        t->version = "fist";
+        t->difficulty = x;
+        t->nonce = 0;
 
-            std::string previous = "";
-            for(int i=0; i < 100; i++)
-            {
-                 previous = previous + T_data[i].id;
-            }
+        auto start = T.begin(); 
+        auto end = T.begin() + 100; 
+    
 
-            b->merkle_root = hash(previous); //  paimti visų į naują bloką dedamų transakcijų hash'ą.
+         std::vector<transaction> Tran(100); 
+       // std::vector<transaction> T_data;
+        //T_data = slicing(T); 
+       // b->data = T_data;
+        copy(start, end, Tran.begin()); 
 
+        
             for(int i=0; i < 100; i++)
             {
                     T.erase(T.begin());
             }
 
-            std::string time_int, stringis, nonciukas, diff, merkleris;
-            stringis = head->version + head->prev_hash;
-            time_int = static_cast<std::ostringstream*>( &(std::ostringstream() << head->timestamp) )->str();
-            nonciukas = static_cast<std::ostringstream*>( &(std::ostringstream() << head->nonce) )->str();
-            diff = static_cast<std::ostringstream*>( &(std::ostringstream() << head->difficulty) )->str();
-            merkleris = static_cast<std::ostringstream*>( &(std::ostringstream() << head->merkle_root) )->str();
+        t->data = Tran;
+
+
+        std::string stringtohash = "";
+        for(int i = 0; i < 100; i++)
+        {
+            stringtohash += t->data[i].id;
+        }                          
+
+        t->merkel_root = hash(stringtohash);
+
+            std::string next;
+        
+            std::string time_int, stringis, diff;
+            stringis = prev->version + prev->prev_hash + prev->merkel_root;
+            time_int = static_cast<std::ostringstream*>( &(std::ostringstream() << prev->timestamp) )->str();
+            diff = static_cast<std::ostringstream*>( &(std::ostringstream() << prev->difficulty) )->str();
 
             stringis.append(time_int);
-            stringis.append(nonciukas);
             stringis.append(diff); 
-            stringis.append(merkleris);
-//std::cout << "as jau cia" << std::endl;
+
             next = stringis;
-            //ats = block_mining(2, next, Nonce); //sita reik keisti
-            b->prev_hash = hash(next); 
-        } 
 
-         b->next = head;
-         head = b;
 
-         return head;
-}
+        char diff_target[x + 1];
+        for (int i = 0; i < x; ++i) 
+        {
+            diff_target[i] = '0';
+        }
+        diff_target[x] = '\0';
 
-void printResult(std::vector<transaction>& T) 
-{ 
-       std::cout << "--------------------------------------------------------------------------------"<< std::endl;
-      for(int i=0; i < T.size(); i++)
-        std::cout << std::setw(20) << std::left << T[i].id <<"\t\t" << T[i].sender <<"\t\t" << T[i].recipient<<"\t\t" << T[i].sum << std::endl;
+        std::string a(diff_target);
 
-} 
+        do
+        {
+            prev->nonce++;
+            std::string stringtohash = next + std::to_string(prev->nonce);
+            t->prev_hash = hash(stringtohash);
+        }while(t->prev_hash.substr(0, x) != a);
 
-void printList(block* head)
-{
-  for ( ; head; head = head->next )
-  {
-    std::cout << head->prev_hash << "\t" << head->timestamp << "\t" << head->version << "\t" << head->nonce << "\t" << head->difficulty << "\t" << head->merkle_root    << std::endl;
-  }
+        std::cout << t->prev_hash << std::endl;
+        t->next = NULL;
+    }
 }
 
 int main()
 {
-    Timer t; // Paleisti
-    block* head = NULL;
-
-    int x = 10;
+    Timer t;
+    
+    std::vector<user> U;
+    net_users(U);
 
     std::vector<transaction> T;
     T = transactions();
 
-    for (int i = 0; i < x; i++ )
+    block* B = NULL;
+    int i = 1;
+    while(!T.empty())
     {
-        head = block_generation(head, i, T);
+        std::cout << i << " ";
+        block_generation(B, T, 2);
+        i++;
     }
 
-  std::cout << "LIST: " << std::endl;
-  std::cout << std::endl;
 
-   printList(head);
+
     std::cout <<  t.elapsed() << " s\n";
 
     return 0;
 
 }
+
+
 
 
 
