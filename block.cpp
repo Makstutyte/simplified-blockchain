@@ -45,6 +45,9 @@ class block
 
 };
 
+block *t;
+block *prev;
+
 class Timer 
 {
     private:
@@ -293,17 +296,18 @@ std::string block_mining(uint32_t difficulty, std::string next, int& Nonce)
     return ats;
 }
 
-void block_generation(block* &b, std::vector<transaction> &T, int x)
+void block_generation(block* &b, std::vector<transaction> &T, int x, int lo)
 {
     if(!b)
     {
             b = new block;
 
-        int64_t time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-        b->timestamp = time;
         b->version = "first";
         b->difficulty = x;
         b->nonce = 0;
+
+        int64_t time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+        b->timestamp = time;
 
         auto start = T.begin(); 
         auto end = T.begin() + 100; 
@@ -313,6 +317,7 @@ void block_generation(block* &b, std::vector<transaction> &T, int x)
         //T_data = slicing(T); 
        // b->data = T_data;
     
+        //copy(start, end, back_inserter(Tran)); 
         copy(start, end, Tran.begin()); 
 
             for(int i=0; i < 100; i++)
@@ -322,51 +327,57 @@ void block_generation(block* &b, std::vector<transaction> &T, int x)
 
         b->data = Tran;
 
-        std::string stringtohash = "";
+        std::string h = "";
         for(int i = 0; i < 100; i++)
         {
-            stringtohash += b->data[i].id;
+            h += b->data[i].id;
         }                           
 
-        b->merkel_root = hash(stringtohash);
+        b->merkel_root = hash(h);
         b->prev_hash = "0";
         b->next = NULL;
     }
 
     else
     {
-        block *t = b;
+        t = b;
         int n = 0;
+
         while(t->next)
         {
             t = t->next;
             n++;
         }
+
         t->next = new block;
         t = t->next;
-        block *prev = b;
+
+        prev = b;
         int i = 0;
+
         while(i < n)
         {
             prev = prev->next;
             i++;
         }
 
-        int64_t time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-        t->timestamp = time;
         t->version = "fist";
         t->difficulty = x;
         t->nonce = 0;
 
+        int64_t time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+        t->timestamp = time;
+
         auto start = T.begin(); 
         auto end = T.begin() + 100; 
     
-
          std::vector<transaction> Tran(100); 
        // std::vector<transaction> T_data;
         //T_data = slicing(T); 
        // b->data = T_data;
-        copy(start, end, Tran.begin()); 
+        // copy(start, end, back_inserter(Tran)); 
+
+        copy(start, end, Tran.begin());  
 
         
             for(int i=0; i < 100; i++)
@@ -377,13 +388,13 @@ void block_generation(block* &b, std::vector<transaction> &T, int x)
         t->data = Tran;
 
 
-        std::string stringtohash = "";
+        std::string h = "";
         for(int i = 0; i < 100; i++)
         {
-            stringtohash += t->data[i].id;
+            h += t->data[i].id;
         }                          
 
-        t->merkel_root = hash(stringtohash);
+        t->merkel_root = hash(h);
 
             std::string next;
         
@@ -410,11 +421,11 @@ void block_generation(block* &b, std::vector<transaction> &T, int x)
         do
         {
             prev->nonce++;
-            std::string stringtohash = next + std::to_string(prev->nonce);
-            t->prev_hash = hash(stringtohash);
+            std::string h = next + std::to_string(prev->nonce);
+            t->prev_hash = hash(h);
         }while(t->prev_hash.substr(0, x) != a);
 
-        std::cout << t->prev_hash << std::endl;
+        std::cout << "blokas " << lo-1 << "  " << t->prev_hash << std::endl;
         t->next = NULL;
     }
 }
@@ -422,31 +433,30 @@ void block_generation(block* &b, std::vector<transaction> &T, int x)
 int main()
 {
     Timer t;
-    
+    int kiek = 5;
+
     std::vector<user> U;
     net_users(U);
 
     std::vector<transaction> T;
     T = transactions();
 
+    std::cout <<  "generuojami "  << kiek-1 << "   blokai"<< "\n";
+
     block* B = NULL;
     int i = 1;
-    while(!T.empty())
+    while(kiek)
     {
-        std::cout << i << " ";
-        block_generation(B, T, 2);
+        block_generation(B, T, 2, i);
         i++;
+        kiek --;
     }
-
-
 
     std::cout <<  t.elapsed() << " s\n";
 
     return 0;
 
 }
-
-
 
 
 
