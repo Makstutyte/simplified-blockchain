@@ -162,7 +162,7 @@ std::string hash (std::string const& txt)
         }
 
         return hash;
-};
+}
 
 std::random_device rd;
     std::mt19937::result_type seed = rd() ^ (
@@ -274,27 +274,43 @@ std::vector<transaction> slicing(std::vector<transaction>& arr)
     return result; 
 } 
 
-std::string block_mining(uint32_t difficulty, std::string next, int& Nonce) 
+std::string hash_2(std::string &first, std::string &second) 
 {
-    std::string ats;
-    Nonce = -1;
-    char diff_target[difficulty + 1];
-    for (int i = 0; i < difficulty; ++i) 
-    {
-         diff_target[i] = '0';
-    }
-    diff_target[difficulty] = '\0';
-
-   std::string str(diff_target);
-
-    do {
-            Nonce++;
-            ats = hash(next);
-       } while (ats.substr(0, difficulty) != str);
-
-    std::cout << "Block mined: " << ats << std::endl;
+    std::string firstHash = hash(first);
+    std::string secondHash = hash(second);
+    
+    std::string concat = firstHash + secondHash;
+    
+    std::string ats = hash(concat); 
+    
     return ats;
 }
+
+std::vector<std::string> merkle(std::vector <std::string> &root_hash) 
+{
+ 
+    if (root_hash.size() == 1) 
+    {
+       // std::cout << "CALCULATED MERKLE ROOT IS: ";
+       // std::cout << txHashes[0] << std::endl;
+        return root_hash;
+    }
+
+    std::vector <std::string> temp;
+    
+    for (int i = 0; i < root_hash.size() - 1; i = i + 2) 
+    {
+        temp.push_back(hash_2(root_hash[i], root_hash[i + 1]));
+    }
+    
+    if (root_hash.size() % 2 == 1) 
+    {
+        temp.push_back(hash_2(root_hash[root_hash.size() - 1], root_hash[root_hash.size() - 1]));
+    }
+    
+    return merkle(temp);
+}
+
 
 void block_generation(block* &b, std::vector<transaction> &T, int x, int lo)
 {
@@ -328,12 +344,23 @@ void block_generation(block* &b, std::vector<transaction> &T, int x, int lo)
         b->data = Tran;
 
         std::string h = "";
+         std::vector<std::string> v(100);
         for(int i = 0; i < 100; i++)
         {
-            h += b->data[i].id;
+            v.push_back(b->data[i].id);
+          //  h += b->data[i].id;
         }                           
 
-        b->merkel_root = hash(h);
+        std::vector<std::string> aha;
+        aha = merkle(v);
+
+        std::stringstream s;
+        std::for_each(std::begin(aha), std::end(aha), [&s](const std::string &elem) { s << elem; } );
+   
+        std::string labas;
+        labas = s.str();
+
+        b->merkel_root = labas;
         b->prev_hash = "0";
         b->next = NULL;
     }
@@ -387,14 +414,23 @@ void block_generation(block* &b, std::vector<transaction> &T, int x, int lo)
 
         t->data = Tran;
 
-
-        std::string h = "";
+        std::vector<std::string> v(100);
         for(int i = 0; i < 100; i++)
         {
-            h += t->data[i].id;
-        }                          
+            v.push_back(t->data[i].id);
+          //  h += b->data[i].id;
+        }                           
 
-        t->merkel_root = hash(h);
+        std::vector<std::string> aha;
+        aha = merkle(v);
+
+        std::stringstream s;
+        std::for_each(std::begin(aha), std::end(aha), [&s](const std::string &elem) { s << elem; } );
+   
+        std::string labas;
+        labas = s.str();
+
+        t->merkel_root = labas;
 
             std::string next;
         
@@ -457,7 +493,6 @@ int main()
     return 0;
 
 }
-
 
 
 
