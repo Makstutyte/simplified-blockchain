@@ -235,7 +235,13 @@ std::vector<transaction> transactions()
 
         n.recipient = gen_user[ran1].public_key;
 
-            do
+        std::uniform_int_distribution<unsigned> dist1(1, gen_user[ran].balance - 1);
+        n.sum = dist1(gen);
+
+        gen_user[ran].balance = gen_user[ran].balance - n.sum;
+        gen_user[ran1].balance = gen_user[ran1].balance + n.sum;
+
+  /*        do
             {
                     std::uniform_int_distribution<unsigned> dist1(1, gen_user[ran].balance - 1);
                     n.sum = dist1(gen);
@@ -246,6 +252,7 @@ std::vector<transaction> transactions()
                     //----------------------
 
             } while(gen_user[ran].balance<0);
+    */ 
 
         std::string id, num;
         id = n.sender + n.recipient;
@@ -253,11 +260,45 @@ std::vector<transaction> transactions()
         id.append(num); 
         n.id = hash(id);
 		
-        if (gen_user[ran].balance<=0 )
-        kiek++;
 
 		T.push_back(n);
 	}
+
+          std::cout << "--------------------------------------------------------------------------------"<< std::endl;
+          int dydis = 0;
+
+    for(int i=0; i < T.size(); i++)
+    {
+       // std::cout << T[i].sum << std::endl;      
+        if (T[i].sum < 0 )
+        {
+            kiek++;
+            for(int j=0; j < 1; j++)
+            {
+                    T.erase(T.begin());
+            }
+        }
+              dydis ++;
+    }
+        std::cout << "NEIGIAMOS TRANSAKCIJU SUMOS ->  ";
+        std::cout << kiek << std::endl;
+        std::cout << "KIEK LIKO TRANSAKCIJU PO NEIGIAMU SUMU SALINIMO ->  ";
+        std::cout << dydis << std::endl;
+
+        // Transakcijos hash'o tikrinimas: Pool'o lygmenyje realizuokite validumo patikrinimą, t.y., ar tranksakcijos informacijos hash'as
+        // sutampa su transakcijos ID. Tokiu būdu įsitikinsite, kad transakcija nebuvo suklastota, kol ji "keliavo" iki transakcijų pool'o.
+    int sutampa = 0;
+    for(int i=0; i < T.size(); i++)
+    {   
+        if (T[i].id == hash(T[i].sender + T[i].recipient + std::to_string(T[i].sum)))
+        {
+            sutampa++;
+        }
+    }
+    std::cout << "kiek tranksakcijos informacijos hash'u sutampa su transakcijos ID ->  ";
+    std::cout << sutampa << std::endl;
+
+
         return T;
 }
 
@@ -477,6 +518,8 @@ int main()
     std::vector<transaction> T;
     T = transactions();
 
+
+/*
     std::cout <<  "generuojami "  << kiek-1 << "   blokai"<< "\n";
 
     block* B = NULL;
@@ -487,6 +530,8 @@ int main()
         i++;
         kiek --;
     }
+*/
+
 
     std::cout <<  t.elapsed() << " s\n";
 
