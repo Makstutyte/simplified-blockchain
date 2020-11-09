@@ -49,3 +49,5 @@ To run the program code you need:
   
 The provided version is in need for improvement by adding merkel root.
 
+v0.1 four block generation lasted 29.5812 s
+v0.2 four block generation lasted 2061.76 s
