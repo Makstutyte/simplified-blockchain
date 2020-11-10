@@ -208,7 +208,7 @@ void net_users (std::vector<user>& gen_user)
     }
 }
 
-std::vector<transaction> transactions()
+std::vector<transaction> transactions(int kiek1)
 {
     std::vector<user> gen_user;
     net_users (gen_user); 
@@ -241,12 +241,26 @@ std::vector<transaction> transactions()
         gen_user[ran].balance = gen_user[ran].balance - n.sum;
         gen_user[ran1].balance = gen_user[ran1].balance + n.sum;
 
+  /*        do
+            {
+                    std::uniform_int_distribution<unsigned> dist1(1, gen_user[ran].balance - 1);
+                    n.sum = dist1(gen);
+
+                    // TODO aptvarkyti
+                    gen_user[ran].balance = gen_user[ran].balance - n.sum;
+                    gen_user[ran1].balance = gen_user[ran1].balance + n.sum;
+                    //----------------------
+
+            } while(gen_user[ran].balance<0);
+    */ 
+
         std::string id, num;
         id = n.sender + n.recipient;
         num = static_cast<std::ostringstream*>( &(std::ostringstream() << n.sum) )->str();
         id.append(num); 
         n.id = hash(id);
 		
+
 		T.push_back(n);
 	}
 
@@ -264,10 +278,6 @@ std::vector<transaction> transactions()
         }
               dydis ++;
     }
-     //   std::cout << "NEIGIAMOS TRANSAKCIJU SUMOS ->  ";
-     //   std::cout << kiek << std::endl;
-     //   std::cout << "KIEK LIKO TRANSAKCIJU PO NEIGIAMU SUMU SALINIMO ->  ";
-      //  std::cout << dydis << std::endl;
 
     int sutampa = 0;
     for(int i=0; i < T.size(); i++)
@@ -276,10 +286,16 @@ std::vector<transaction> transactions()
         {
             sutampa++;
         }
+
+        else if(T[i].id != hash(T[i].sender + T[i].recipient + std::to_string(T[i].sum)))
+        {
+            for(int j=0; j < 1; j++)
+            {
+                    T.erase(T.begin());
+            }
+        }
     }
-  //  std::cout << "kiek tranksakcijos informacijos hash'u sutampa su transakcijos ID ->  ";
-  //  std::cout << sutampa << std::endl;
-	
+
         return T;
 }
 
@@ -345,6 +361,20 @@ void block_generation(block* &b, std::vector<transaction> &T, int x, int lo)
         int64_t time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
         b->timestamp = time;
 
+        /*
+        auto start = T.begin(); 
+        auto end = T.begin() + 100; 
+    
+        std::vector<transaction> Tran(100); 
+
+        copy(start, end, Tran.begin()); 
+            for(int i=0; i < 100; i++)
+            {
+                    T.erase(T.begin());
+            }
+        b->data = Tran;
+        */
+
         std::vector<transaction> Tran(100); 
 
             for(int i=0; i < 100; i++)
@@ -354,7 +384,6 @@ void block_generation(block* &b, std::vector<transaction> &T, int x, int lo)
             }
 
         b->data = Tran;
-
 
         std::string h = "";
          std::vector<std::string> v(100);
@@ -409,46 +438,31 @@ void block_generation(block* &b, std::vector<transaction> &T, int x, int lo)
         t->timestamp = time;
 
         std::vector<transaction> A1(100); 
+        std::vector<transaction> B1(100); 
+        std::vector<transaction> C1(100); 
+        std::vector<transaction> D1(100);
+        std::vector<transaction> E1(100); 
+
 
             for(int i=0; i < 100; i++)
             {
                 std::uniform_int_distribution<unsigned> dist1(1, T.size() - 1);
                 A1.push_back(T[dist1(gen)]);
+
+                std::uniform_int_distribution<unsigned> dist2(1, T.size() - 1);
+                B1.push_back(T[dist2(gen)]);
+
+                std::uniform_int_distribution<unsigned> dist3(1, T.size() - 1);
+                C1.push_back(T[dist3(gen)]);
+
+                std::uniform_int_distribution<unsigned> dist4(1, T.size() - 1);
+                D1.push_back(T[dist4(gen)]);
+
+                std::uniform_int_distribution<unsigned> dist5(1, T.size() - 1);
+                E1.push_back(T[dist5(gen)]);
             }
 
-        std::vector<transaction> B1(100); 
-
-            for(int i=0; i < 100; i++)
-            {
-                std::uniform_int_distribution<unsigned> dist1(1, T.size() - 1);
-                B1.push_back(T[dist1(gen)]);
-            }
-
-        std::vector<transaction> C1(100); 
-
-            for(int i=0; i < 100; i++)
-            {
-                std::uniform_int_distribution<unsigned> dist1(1, T.size() - 1);
-                C1.push_back(T[dist1(gen)]);
-            }
-
-        std::vector<transaction> D1(100); 
-
-            for(int i=0; i < 100; i++)
-            {
-                std::uniform_int_distribution<unsigned> dist1(1, T.size() - 1);
-                D1.push_back(T[dist1(gen)]);
-            }
-
-        std::vector<transaction> E1(100); 
-
-            for(int i=0; i < 100; i++)
-            {
-                std::uniform_int_distribution<unsigned> dist1(1, T.size() - 1);
-                E1.push_back(T[dist1(gen)]);
-            }
-
-                int apsisukimai = 0;
+               
 
                 char diff_target[x + 1];
                 for (int i = 0; i < x; ++i) 
@@ -470,9 +484,10 @@ void block_generation(block* &b, std::vector<transaction> &T, int x, int lo)
                     stringis.append(time_int);
                     stringis.append(diff); 
 
-    bool ar_pavyko = false;
-            do
-            {
+        bool ar_pavyko = false;
+           do
+            { 
+                int apsisukimai = 0;
                 int what;
                 std::uniform_int_distribution<unsigned> dist1(1, 5);
                 what = dist1(gen);
@@ -502,6 +517,23 @@ void block_generation(block* &b, std::vector<transaction> &T, int x, int lo)
                     t->data = E1;
                 }
 
+                next = stringis;
+
+                do
+                {
+                    prev->nonce++;
+                    std::string h = next + std::to_string(prev->nonce);
+                    t->prev_hash = hash(h);
+                    apsisukimai++;
+                }while(t->prev_hash.substr(0, x) != a || apsisukimai > 100000);
+
+
+                if(t->prev_hash.substr(0, x) == a )
+                    ar_pavyko = true;
+
+            }while(!ar_pavyko);
+      
+
                 std::vector<std::string> v(100);
                 for(int i = 0; i < 100; i++)
                 {
@@ -519,25 +551,6 @@ void block_generation(block* &b, std::vector<transaction> &T, int x, int lo)
 
                 t->merkel_root = labas;
 
-                next = stringis;
-
-                do
-                {
-                    prev->nonce++;
-                    std::string h = next + std::to_string(prev->nonce);
-                    t->prev_hash = hash(h);
-                    apsisukimai++;
-                }while(t->prev_hash.substr(0, x) != a || apsisukimai < 100000);
-
-
-                if(t->prev_hash.substr(0, x) == a )
-                    ar_pavyko = true;
-
-            }while(!ar_pavyko);
-      
-
-
-    
 
         std::cout << "blokas " << lo-1 << "  " << t->prev_hash << std::endl;
         t->next = NULL;
@@ -547,13 +560,14 @@ void block_generation(block* &b, std::vector<transaction> &T, int x, int lo)
 int main()
 {
     Timer t;
-    int kiek = 5;
+    int kiek = 15;
 
     std::vector<user> U;
     net_users(U);
 
     std::vector<transaction> T;
-    T = transactions();
+    T = transactions(kiek);
+
 
 
     std::cout <<  "generuojami "  << kiek-1 << "   blokai"<< "\n";
