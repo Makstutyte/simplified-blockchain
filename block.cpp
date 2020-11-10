@@ -220,7 +220,7 @@ std::vector<transaction> transactions(int kiek1)
     std::mt19937 mt(static_cast<long unsigned int>(hrClock::now().time_since_epoch().count()));
     std::uniform_int_distribution<int> dist(0, 999); 
 
-	for (int i = 0; i < 10000; i++)
+	for (int i = 0; i < kiek1*100; i++)
 	{
 		int ran, ran1, ran2;
 		std::string u1, siuntejas, u3;
@@ -295,7 +295,6 @@ std::vector<transaction> transactions(int kiek1)
             }
         }
     }
-
         return T;
 }
 
@@ -361,20 +360,6 @@ void block_generation(block* &b, std::vector<transaction> &T, int x, int lo)
         int64_t time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
         b->timestamp = time;
 
-        /*
-        auto start = T.begin(); 
-        auto end = T.begin() + 100; 
-    
-        std::vector<transaction> Tran(100); 
-
-        copy(start, end, Tran.begin()); 
-            for(int i=0; i < 100; i++)
-            {
-                    T.erase(T.begin());
-            }
-        b->data = Tran;
-        */
-
         std::vector<transaction> Tran(100); 
 
             for(int i=0; i < 100; i++)
@@ -384,6 +369,7 @@ void block_generation(block* &b, std::vector<transaction> &T, int x, int lo)
             }
 
         b->data = Tran;
+
 
         std::string h = "";
          std::vector<std::string> v(100);
@@ -430,12 +416,24 @@ void block_generation(block* &b, std::vector<transaction> &T, int x, int lo)
             i++;
         }
 
-        t->version = "fist";
-        t->difficulty = x;
-        t->nonce = 0;
+        char diff_target[x + 1];
+        for (int i = 0; i < x; ++i) 
+        {
+             diff_target[i] = '0';
+        }
+            diff_target[x] = '\0';
 
-        int64_t time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-        t->timestamp = time;
+        std::string a(diff_target);
+
+        std::string next;
+                
+        std::string time_int, stringis, diff;
+        stringis = prev->version + prev->prev_hash + prev->merkel_root;
+        time_int = static_cast<std::ostringstream*>( &(std::ostringstream() << prev->timestamp) )->str();
+        diff = static_cast<std::ostringstream*>( &(std::ostringstream() << prev->difficulty) )->str();
+
+        stringis.append(time_int);
+        stringis.append(diff); 
 
         std::vector<transaction> A1(100); 
         std::vector<transaction> B1(100); 
@@ -463,28 +461,7 @@ void block_generation(block* &b, std::vector<transaction> &T, int x, int lo)
             }
 
                
-
-                char diff_target[x + 1];
-                for (int i = 0; i < x; ++i) 
-                {
-                    diff_target[i] = '0';
-                }
-                diff_target[x] = '\0';
-
-                std::string a(diff_target);
-
-
-                    std::string next;
-                
-                    std::string time_int, stringis, diff;
-                    stringis = prev->version + prev->prev_hash + prev->merkel_root;
-                    time_int = static_cast<std::ostringstream*>( &(std::ostringstream() << prev->timestamp) )->str();
-                    diff = static_cast<std::ostringstream*>( &(std::ostringstream() << prev->difficulty) )->str();
-
-                    stringis.append(time_int);
-                    stringis.append(diff); 
-
-        bool ar_pavyko = false;
+  bool ar_pavyko = false;
            do
             { 
                 int apsisukimai = 0;
@@ -494,38 +471,156 @@ void block_generation(block* &b, std::vector<transaction> &T, int x, int lo)
 
                 if(what == 1)
                 {
+                    
+                    t->version = "fist";
+                    t->difficulty = x;
+                    t->nonce = 0;
+
+                    int64_t time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+                    t->timestamp = time;
                     t->data = A1;
+
+                    std::vector<std::string> v(100);
+                    for(int i = 0; i < 100; i++)
+                    {
+                        v.push_back(t->data[i].id);
+                    }                           
+
+                    std::vector<std::string> aha;
+                    aha = merkle(v);
+
+                    std::stringstream s;
+                    std::for_each(std::begin(aha), std::end(aha), [&s](const std::string &elem) { s << elem; } );
+            
+                    std::string labas;
+                    labas = s.str();
+
+                    t->merkel_root = labas;
                 }
 
                 else if(what == 2)
                 {
+                    t->version = "fist";
+                    t->difficulty = x;
+                    t->nonce = 0;
+
+                    int64_t time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+                    t->timestamp = time;
                     t->data = B1;
+
+                    std::vector<std::string> v(100);
+                    for(int i = 0; i < 100; i++)
+                    {
+                        v.push_back(t->data[i].id);
+                    }                           
+
+                    std::vector<std::string> aha;
+                    aha = merkle(v);
+
+                    std::stringstream s;
+                    std::for_each(std::begin(aha), std::end(aha), [&s](const std::string &elem) { s << elem; } );
+            
+                    std::string labas;
+                    labas = s.str();
+
+                    t->merkel_root = labas;
                 }
 
                else if(what == 3)
                 {
+                    t->version = "fist";
+                    t->difficulty = x;
+                    t->nonce = 0;
+
+                    int64_t time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+                    t->timestamp = time;
                     t->data = C1;
+
+                    std::vector<std::string> v(100);
+                    for(int i = 0; i < 100; i++)
+                    {
+                        v.push_back(t->data[i].id);
+                    }                           
+
+                    std::vector<std::string> aha;
+                    aha = merkle(v);
+
+                    std::stringstream s;
+                    std::for_each(std::begin(aha), std::end(aha), [&s](const std::string &elem) { s << elem; } );
+            
+                    std::string labas;
+                    labas = s.str();
+
+                    t->merkel_root = labas;
                 }
 
                else if(what == 4)
                 {
+                    t->version = "fist";
+                    t->difficulty = x;
+                    t->nonce = 0;
+
+                    int64_t time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+                    t->timestamp = time;
                     t->data = D1;
+
+                    std::vector<std::string> v(100);
+                    for(int i = 0; i < 100; i++)
+                    {
+                        v.push_back(t->data[i].id);
+                    }                           
+
+                    std::vector<std::string> aha;
+                    aha = merkle(v);
+
+                    std::stringstream s;
+                    std::for_each(std::begin(aha), std::end(aha), [&s](const std::string &elem) { s << elem; } );
+            
+                    std::string labas;
+                    labas = s.str();
+
+                    t->merkel_root = labas;
                 }
 
                else if(what == 5)
                 {
+                    t->version = "fist";
+                    t->difficulty = x;
+                    t->nonce = 0;
+
+                    int64_t time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+                    t->timestamp = time;
                     t->data = E1;
+
+                    std::vector<std::string> v(100);
+                    for(int i = 0; i < 100; i++)
+                    {
+                        v.push_back(t->data[i].id);
+                    }                           
+
+                    std::vector<std::string> aha;
+                    aha = merkle(v);
+
+                    std::stringstream s;
+                    std::for_each(std::begin(aha), std::end(aha), [&s](const std::string &elem) { s << elem; } );
+            
+                    std::string labas;
+                    labas = s.str();
+
+                    t->merkel_root = labas;
                 }
 
                 next = stringis;
+                time_t start = std::time(0);time_t b1 = 5;
 
                 do
                 {
+                    
                     prev->nonce++;
                     std::string h = next + std::to_string(prev->nonce);
                     t->prev_hash = hash(h);
                     apsisukimai++;
-                }while(t->prev_hash.substr(0, x) != a || apsisukimai > 100000);
+                }while(t->prev_hash.substr(0, x) != a || difftime( std::time(0), start) < b1 );  // ar cia gerai??
 
 
                 if(t->prev_hash.substr(0, x) == a )
@@ -533,23 +628,6 @@ void block_generation(block* &b, std::vector<transaction> &T, int x, int lo)
 
             }while(!ar_pavyko);
       
-
-                std::vector<std::string> v(100);
-                for(int i = 0; i < 100; i++)
-                {
-                    v.push_back(t->data[i].id);
-                }                           
-
-                std::vector<std::string> aha;
-                aha = merkle(v);
-
-                std::stringstream s;
-                std::for_each(std::begin(aha), std::end(aha), [&s](const std::string &elem) { s << elem; } );
-        
-                std::string labas;
-                labas = s.str();
-
-                t->merkel_root = labas;
 
 
         std::cout << "blokas " << lo-1 << "  " << t->prev_hash << std::endl;
@@ -560,15 +638,13 @@ void block_generation(block* &b, std::vector<transaction> &T, int x, int lo)
 int main()
 {
     Timer t;
-    int kiek = 15;
+    int kiek = 3;
 
     std::vector<user> U;
     net_users(U);
 
     std::vector<transaction> T;
     T = transactions(kiek);
-
-
 
     std::cout <<  "generuojami "  << kiek-1 << "   blokai"<< "\n";
 
@@ -586,4 +662,5 @@ int main()
     return 0;
 
 }
+
 
