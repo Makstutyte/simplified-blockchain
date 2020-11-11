@@ -309,82 +309,72 @@ std::vector<std::string> merkle(std::vector <std::string> &root_hash)
 
 std::vector<transaction> transaction_validation(std::vector<transaction>& T, std::vector<user>& U)
 {
-    std::vector<transaction> laikinas;
-    copy(T.begin(), T.end(), back_inserter(laikinas));
- 
-    std::vector<transaction> Transakcijos(100);
-   // Transakcijos.clear();
- int b =0;
-
-     if (Transakcijos.empty()) 
-    {
-        std::cout << "True" << std::endl; 
-    }
-    else {
-        std::cout << "False" << std::endl; 
-    }
-    for(int i = 0; i < 100; i++)
-    {
-        std::uniform_int_distribution<unsigned> dist1(1, T.size() - 10);
-        int po_viena = dist1(gen);
-
-        Transakcijos.push_back(laikinas[po_viena]);
+    std::vector<transaction> Tran;
+    int b = 0, a, c = 0, d = 0;
+std::cout << "dydis visu pries generacija    " << T.size() << std::endl;
+    for(int i=0; i < 100; i++)
+    { 
+       std::uniform_int_distribution<unsigned> dist1(1, T.size() - 1);
+       
+        a = dist1(gen); 
+        Tran.push_back(T[dist1(gen)]);
         b++;
-        laikinas.erase(laikinas.begin() + po_viena);
-    }
 
-    for(int i = 0; i < Transakcijos.size()-1; i++)
-    {
         for(int j = 0; j < U.size()-1; j++)
         {
-            if (Transakcijos[i].sender == U[j].public_key)
+
+            if (T[a].sender == U[j].public_key)
             {
-                if(Transakcijos[i].sum > U[j].balance || T[i].id != hash(T[i].sender + T[i].recipient + std::to_string(T[i].sum)) )
+                if(T[a].sum > U[j].balance || T[a].id != hash(T[a].sender + T[a].recipient + std::to_string(T[a].sum)) )
                 {
-                    Transakcijos.erase(Transakcijos.begin() + i);
-                    T.erase(T.begin() + i);
+                            T.erase(T.begin() + a);
+                            Tran.erase(Tran.begin() + i);
+                            c++;
                 }
 
                 else
                 {
-                    U[j].balance = U[j].balance - Transakcijos[i].sum;
+                    U[j].balance = U[j].balance - T[a].sum;
 
                     for(int k = 0; k < U.size()-1; k++)
                     {
-                        if(Transakcijos[i].recipient== U[k].public_key)
+                        if(T[a].recipient== U[k].public_key)
                         {
-                            U[k].balance = U[k].balance + Transakcijos[i].sum;
+                            U[k].balance = U[k].balance + T[a].sum;
                         }
                     }
-                    
                 }
-                
             }
         }
     }
-    return Transakcijos;
 
+        T.shrink_to_fit();
+        std::cout << "KIEK PrideTAA  b   " << b << std::endl;  
+        std::cout << "ismesta is T   " << c << std::endl; 
+        std::cout << "ismesta is Tran   " << d << std::endl;
+std::cout << "dydis    " << Tran.size() << std::endl;
+std::cout << "dydis visu po generacijos 100 tran     " << T.size() << std::endl;
+        return Tran; 
+        
 }
 
-void transaction_deletion(std::vector<transaction> Tran, std::vector<transaction>& T)  // istrina tik 99 transakcijas
+void transaction_deletion(std::vector<transaction> Tran, std::vector<transaction>& T)  // istrina per daug
 {
     int a = 0;
-    for(int i = 0; i < Tran.size(); i++)
+    for(int i = 0; i < T.size(); i++)
     {
-        for(int j = 0; j < T.size(); j++)
+        for(int j = 0; j < Tran.size(); j++)
         {
-            if(Tran[i].id == T[j].id)
+            if(Tran[j].id == T[i].id)
             {
-                for(int k=0; k < 1; k++)
-                {
-                        T.erase(T.begin());
+                        T.erase(T.begin()+i);
                         T.shrink_to_fit();
                         a++;
-                }
             }          
         }
     }
-         
+    
+    std::cout << "KIEK PASALINTAA " << a << std::endl;      
 }
 
 
@@ -399,23 +389,28 @@ void block_generation(block* &b, std::vector<transaction> &T, int x, int lo, std
         b->nonce = 0;
 
         int64_t time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-        b->timestamp = time;
-   
+        b->timestamp = time; 
 
-        std::vector<transaction> Tran(100); 
+        std::vector<transaction> Tran; 
         Tran.clear();
 
         Tran = transaction_validation(T, U);
         b->data = Tran;
 
+        for(int i= 0; i<Tran.size()-1; i++)
+        {
+            std::cout << i << "            "<< Tran[i].id << std::endl;
+        }
         Tran.shrink_to_fit();
+      std::cout << "TRANSAKCIJu sugeneruota i 100 vietu   "<< Tran.size() << std::endl;
 
 
         std::string h = "";
-         std::vector<std::string> v(100);
-        for(int i = 0; i < 100; i++)
+         std::vector<std::string> v;
+        for(int i = 0; i < Tran.size()-1; i++)
         {
             v.push_back(b->data[i].id);
+            std::cout << i << "            "<< v[i] << std::endl;
         }                           
 
         std::vector<std::string> aha;
@@ -432,7 +427,8 @@ void block_generation(block* &b, std::vector<transaction> &T, int x, int lo, std
         b->next = NULL;
 
         transaction_deletion(Tran, T);
-
+        std::cout << "TRANSAKCIJu sugeneruota i 100 vietu   "<< Tran.size() << std::endl;
+        std::cout << "TRANSAKCIJOS PO ELEMENTU SALINIMO - TURETU BUTI VISU 100 MAZIAU  "<< T.size() << std::endl;
     }
 
     else
@@ -481,7 +477,10 @@ void block_generation(block* &b, std::vector<transaction> &T, int x, int lo, std
         std::vector<transaction> A1(100);
         A1.clear();
         A1 = transaction_validation(T, U); 
-
+       /* std::vector<transaction> B1 = transaction_validation(T); 
+        std::vector<transaction> C1 = transaction_validation(T);  
+        std::vector<transaction> D1 = transaction_validation(T); 
+        std::vector<transaction> E1 = transaction_validation(T); */
 
         bool ar_pavyko = false;
            do
@@ -491,6 +490,8 @@ void block_generation(block* &b, std::vector<transaction> &T, int x, int lo, std
                 std::uniform_int_distribution<unsigned> dist1(1, 5);
                 what = dist1(gen);
 
+               // if(what == 1)
+                {
                     
                     t->version = "fist";
                     t->difficulty = x;
@@ -501,9 +502,10 @@ void block_generation(block* &b, std::vector<transaction> &T, int x, int lo, std
                     t->data = A1;
 
                     std::vector<std::string> v(100);
-                    for(int i = 0; i < A1.size(); i++)
+                    for(int i = 0; i < A1.size()-1; i++)
                     {
                         v.push_back(t->data[i].id);
+                       // std::cout << i << "            "<< v[i] << std::endl;
                     }                           
 
                     std::vector<std::string> aha;
@@ -516,6 +518,8 @@ void block_generation(block* &b, std::vector<transaction> &T, int x, int lo, std
                     labas = s.str();
 
                     t->merkel_root = labas;
+                }
+
 
                 next = stringis;
                 time_t start = std::time(0);time_t b1 = 5;
@@ -535,8 +539,6 @@ void block_generation(block* &b, std::vector<transaction> &T, int x, int lo, std
 
             }while(!ar_pavyko);
       
-
-    
 
         std::cout << "blokas " << lo-1 << "  " << t->prev_hash << std::endl;
         t->next = NULL;
