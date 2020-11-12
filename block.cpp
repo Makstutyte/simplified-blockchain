@@ -35,6 +35,7 @@ class block
 {
     public:
     std::string prev_hash;
+    std::string hash;
     int64_t timestamp;
     std::string version;
     std::string merkel_root;
@@ -210,8 +211,7 @@ void net_users (std::vector<user>& gen_user)
 
 std::vector<transaction> transactions(int kiek1, std::vector<user> gen_user)
 {
-    //std::vector<user> gen_user;
-   // net_users (gen_user); 
+
     std::vector<transaction> T;
 
 	transaction n;
@@ -240,11 +240,6 @@ std::vector<transaction> transactions(int kiek1, std::vector<user> gen_user)
         {
               n.sum = dist1(gen);
         }while(n.sum < 0);
-
-// balansu tikrinimas
-//        gen_user[ran].balance = gen_user[ran].balance - n.sum;
-//        gen_user[ran1].balance = gen_user[ran1].balance + n.sum;
-
 
         std::string id, num;
         id = n.sender + n.recipient;
@@ -313,7 +308,7 @@ std::vector<transaction> transaction_validation(std::vector<transaction>& T, std
     std::vector<transaction> laikinas;
     copy(T.begin(), T.end(), back_inserter(laikinas));
     int b = 0, a, c = 0, d = 0, opa = 0;
-    std::cout << "dydis visu pries generacija    " << T.size() << std::endl;
+
     for(int i=0; i < 100; i++)
     { 
        std::uniform_int_distribution<unsigned> dist1(1, T.size() - 1);
@@ -353,16 +348,12 @@ std::vector<transaction> transaction_validation(std::vector<transaction>& T, std
         laikinas.clear();
         T.shrink_to_fit();
         Tran.shrink_to_fit();
-        std::cout << "KIEK PrideTAA  b   " << b << std::endl;  
-        std::cout << "ismesta is T   " << c << std::endl; 
-        std::cout << "ismesta is Tran   " << d << std::endl;
-        std::cout << "dydis    " << Tran.size() << std::endl;
-        std::cout << "dydis visu po generacijos 100 tran     " << T.size() << std::endl;
+
         return Tran; 
         
 }
 
-void transaction_deletion(std::vector<transaction> Tran, std::vector<transaction>& T)  // istrina per daug
+void transaction_deletion(std::vector<transaction> Tran, std::vector<transaction>& T) 
 {
     int a = 0;
     for(int i = 0; i < T.size()-1; i++)
@@ -377,8 +368,7 @@ void transaction_deletion(std::vector<transaction> Tran, std::vector<transaction
             }          
         }
     }
-    
-    std::cout << "KIEK PASALINTAA " << a << std::endl;      
+      
 }
 
 std::vector<block> single_block_gneration(block* &t,  int x, std::vector<transaction>& T, std::vector<user>& U)
@@ -404,7 +394,6 @@ std::vector<block> single_block_gneration(block* &t,  int x, std::vector<transac
             for(int j = 0; j < A1.size()-1; j++)
             {
                 v.push_back(t->data[j].id);
-               // std::cout << j << "            "<< v[j] << std::endl;
             }                           
 
             std::vector<std::string> aha;
@@ -421,7 +410,6 @@ std::vector<block> single_block_gneration(block* &t,  int x, std::vector<transac
             dievepadek.push_back(*t);
         }
 
-        std::cout << "DYDIS TURETU BUTI 55555            -> " << dievepadek.size()<< std::endl;
         return dievepadek;
 
 }
@@ -439,7 +427,6 @@ void block_generation(block* &b, std::vector<transaction> &T, int x, int lo, std
         int64_t time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
         b->timestamp = time;
 
-// KEICIAMAAA     
 
         std::vector<transaction> Tran; 
         Tran.clear();
@@ -452,8 +439,6 @@ void block_generation(block* &b, std::vector<transaction> &T, int x, int lo, std
            // std::cout << i << "            "<< Tran[i].id << std::endl;
         }
         Tran.shrink_to_fit();
-      std::cout << "TRANSAKCIJu sugeneruota i 100 vietu   "<< Tran.size() << std::endl;
-// KEICIAMAAA IKI CIA
 
 
         std::string h = "";
@@ -461,7 +446,7 @@ void block_generation(block* &b, std::vector<transaction> &T, int x, int lo, std
         for(int i = 0; i < Tran.size()-1; i++)
         {
             v.push_back(b->data[i].id);
-            std::cout << i << "            "<< v[i] << std::endl;
+          
         }                           
 
         std::vector<std::string> aha;
@@ -475,11 +460,42 @@ void block_generation(block* &b, std::vector<transaction> &T, int x, int lo, std
 
         b->merkel_root = labas;
         b->prev_hash = "0";
+
+        char diff_target[x + 1];
+        for (int i = 0; i < x; ++i) 
+        {
+             diff_target[i] = '0';
+        }
+            diff_target[x] = '\0';
+
+        std::string a(diff_target);
+
+        std::string time_int, stringis, diff, next;
+        stringis = b->version + b->prev_hash + b->merkel_root;
+        time_int = static_cast<std::ostringstream*>( &(std::ostringstream() << b->timestamp) )->str();
+        diff = static_cast<std::ostringstream*>( &(std::ostringstream() << b->difficulty) )->str();
+
+        stringis.append(time_int);
+        stringis.append(diff); 
+
+        next = stringis;
+
+            do
+            {
+                                
+                b->nonce++;
+                std::string h = next + std::to_string(b->nonce);
+                b->hash = hash(h);
+
+            }while(b->hash.substr(0, x) != a);
+
+        std::cout << "block " << 1 << std::endl;
+        std::cout  << "hash  ->  " << b->hash <<  "     nonce   -> " << b->nonce << "     prev_hash     -> " << b->prev_hash << std::endl <<  std::endl;
+
         b->next = NULL;
 
         transaction_deletion(Tran, T);
-        std::cout << "TRANSAKCIJu sugeneruota i 100 vietu   "<< Tran.size() << std::endl;
-        std::cout << "TRANSAKCIJOS PO ELEMENTU SALINIMO - TURETU BUTI VISU 100 MAZIAU  "<< T.size() << std::endl;
+
     }
 
     else
@@ -516,17 +532,8 @@ void block_generation(block* &b, std::vector<transaction> &T, int x, int lo, std
 
         std::string next;
                 
-        std::string time_int, stringis, diff;
-        stringis = prev->version + prev->prev_hash + prev->merkel_root;
-        time_int = static_cast<std::ostringstream*>( &(std::ostringstream() << prev->timestamp) )->str();
-        diff = static_cast<std::ostringstream*>( &(std::ostringstream() << prev->difficulty) )->str();
-
-        stringis.append(time_int);
-        stringis.append(diff); 
-
         std::vector<block> as = single_block_gneration(t, 2, T, U);
 
-        std::cout << "DYDIS TURETU BUTI 55555 CIA JAU KREIPIAMES           -> " << as.size()<< std::endl;
         
         bool ar_pavyko = false;
 
@@ -550,40 +557,48 @@ void block_generation(block* &b, std::vector<transaction> &T, int x, int lo, std
 
                          if(howmany[what] < counter)
                          {
-                              howmany[what]++; //cia vykdome prooof of wooork
-                              std::cout << what << "     " << howmany[what] << std::endl;
+                              howmany[what]++; 
 
-                              next = stringis;
                               time_t start = std::time(0);
                               time_t b1 = 5;
 
                               as[what];
 
+                              t->prev_hash = prev->hash;
+
+                                std::string time_int, stringis, diff;
+                                stringis = t->version + t->prev_hash + t->merkel_root;
+                                time_int = static_cast<std::ostringstream*>( &(std::ostringstream() << t->timestamp) )->str();
+                                diff = static_cast<std::ostringstream*>( &(std::ostringstream() << t->difficulty) )->str();
+
+                                stringis.append(time_int);
+                                stringis.append(diff); 
+                                next = stringis;
+
                               do
                               {
                                 
-                                    prev->nonce++;
-                                    std::string h = next + std::to_string(prev->nonce);
-                                    t->prev_hash = hash(h);
+                                    t->nonce++;
+                                    std::string h = next + std::to_string(t->nonce);
+                                    t->hash = hash(h);
 
-                              }while(t->prev_hash.substr(0, x) != a || difftime( std::time(0), start) < b1 );  // ar cia gerai??
+                              }while(t->hash.substr(0, x) != a || difftime( std::time(0), start) < b1 );  
                               
-                             if(t->prev_hash.substr(0, x) == a )
+                             if(t->hash.substr(0, x) == a )
                              {
                                  ar_pavyko = true;
+                                 transaction_deletion(t->data, T);
                                  break;
-                             }
-                                 
+                             }      
                          }
-
                     }
 
             }while(!ar_pavyko);
       
     
 
-        std::cout << "blokas " << lo-1 << "  " << t->prev_hash << std::endl;
-       // std::cout << t->Hash << std::endl << t->nonce << std::endl << t->prev_hash << std::endl <<  std::endl;
+        std::cout << "block " << lo << std::endl;
+        std::cout  << "hash  ->  " << t->hash <<  "     nonce   -> " << t->nonce << "     prev_hash     -> " << t->prev_hash << std::endl <<  std::endl;
         t->next = NULL;
     }
 }
@@ -591,7 +606,7 @@ void block_generation(block* &b, std::vector<transaction> &T, int x, int lo, std
 int main()
 {
     Timer t;
-    int kiek = 6;
+    int kiek = 11;
 
     std::vector<user> U;
     net_users(U);
@@ -599,7 +614,7 @@ int main()
     std::vector<transaction> T;
     T = transactions(kiek, U);
 
-    std::cout <<  "generuojami "  << kiek-1 << "   blokai"<< "\n";
+    std::cout <<  "generating "  << kiek-1 << "   blocks"<< "\n";
 
     block* B = NULL;
     int i = 1;
@@ -615,4 +630,6 @@ int main()
     return 0;
 
 }
+
+
 
