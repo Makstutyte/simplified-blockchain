@@ -35,6 +35,7 @@ class block
 {
     public:
     std::string prev_hash;
+    std::string hash;
     int64_t timestamp;
     std::string version;
     std::string merkel_root;
@@ -162,7 +163,7 @@ std::string hash (std::string const& txt)
         }
 
         return hash;
-};
+}
 
 std::random_device rd;
     std::mt19937::result_type seed = rd() ^ (
@@ -208,10 +209,9 @@ void net_users (std::vector<user>& gen_user)
     }
 }
 
-std::vector<transaction> transactions()
+std::vector<transaction> transactions(int kiek1, std::vector<user> gen_user)
 {
-    std::vector<user> gen_user;
-    net_users (gen_user); 
+
     std::vector<transaction> T;
 
 	transaction n;
@@ -235,17 +235,11 @@ std::vector<transaction> transactions()
 
         n.recipient = gen_user[ran1].public_key;
 
-            do
-            {
-                    std::uniform_int_distribution<unsigned> dist1(1, gen_user[ran].balance - 1);
-                    n.sum = dist1(gen);
-
-                    // TODO aptvarkyti
-                    gen_user[ran].balance = gen_user[ran].balance - n.sum;
-                    gen_user[ran1].balance = gen_user[ran1].balance + n.sum;
-                    //----------------------
-
-            } while(gen_user[ran].balance<0);
+        std::uniform_int_distribution<unsigned> dist1(1, gen_user[ran].balance - 1);
+        do
+        {
+              n.sum = dist1(gen);
+        }while(n.sum < 0);
 
         std::string id, num;
         id = n.sender + n.recipient;
@@ -253,11 +247,10 @@ std::vector<transaction> transactions()
         id.append(num); 
         n.id = hash(id);
 		
-        if (gen_user[ran].balance<=0 )
-        kiek++;
 
 		T.push_back(n);
 	}
+
         return T;
 }
 
@@ -274,33 +267,158 @@ std::vector<transaction> slicing(std::vector<transaction>& arr)
     return result; 
 } 
 
-std::string block_mining(uint32_t difficulty, std::string next, int& Nonce) 
+std::string hash_2(std::string &first, std::string &second) 
 {
-    std::string ats;
-    Nonce = -1;
-    char diff_target[difficulty + 1];
-    for (int i = 0; i < difficulty; ++i) 
-    {
-         diff_target[i] = '0';
-    }
-    diff_target[difficulty] = '\0';
-
-   std::string str(diff_target);
-
-    do {
-            Nonce++;
-            ats = hash(next);
-       } while (ats.substr(0, difficulty) != str);
-
-    std::cout << "Block mined: " << ats << std::endl;
+    std::string firstHash = hash(first);
+    std::string secondHash = hash(second);
+    
+    std::string concat = firstHash + secondHash;
+    
+    std::string ats = hash(concat); 
+    
     return ats;
 }
 
-void block_generation(block* &b, std::vector<transaction> &T, int x, int lo)
+std::vector<std::string> merkle(std::vector <std::string> &root_hash) 
+{
+ 
+    if (root_hash.size() == 1) 
+    {
+        return root_hash;
+    }
+
+    std::vector <std::string> temp;
+    
+    for (int i = 0; i < root_hash.size() - 1; i = i + 2) 
+    {
+        temp.push_back(hash_2(root_hash[i], root_hash[i + 1]));
+    }
+    
+    if (root_hash.size() % 2 == 1) 
+    {
+        temp.push_back(hash_2(root_hash[root_hash.size() - 1], root_hash[root_hash.size() - 1]));
+    }
+    
+    return merkle(temp);
+}
+
+std::vector<transaction> transaction_validation(std::vector<transaction>& T, std::vector<user>& U)
+{
+    std::vector<transaction> Tran;
+    std::vector<transaction> laikinas;
+    copy(T.begin(), T.end(), back_inserter(laikinas));
+    int b = 0, a, c = 0, d = 0, opa = 0;
+
+    for(int i=0; i < 100; i++)
+    { 
+       std::uniform_int_distribution<unsigned> dist1(1, T.size() - 1);
+       
+        a = dist1(gen); 
+        Tran.push_back(laikinas[a]);
+        b++;
+        laikinas.erase(laikinas.begin() + a); 
+
+        for(int j = 0; j < U.size()-1; j++)
+        {
+
+            if (T[a].sender == U[j].public_key)
+            {
+                if(T[a].sum > U[j].balance || T[a].id != hash(T[a].sender + T[a].recipient + std::to_string(T[a].sum)) )
+                {
+                            T.erase(T.begin() + a);
+                            Tran.erase(Tran.begin() + i);
+                            c++;
+                }
+
+                else
+                {
+                    U[j].balance = U[j].balance - T[a].sum;
+
+                    for(int k = 0; k < U.size()-1; k++)
+                    {
+                        if(T[a].recipient== U[k].public_key)
+                        {
+                            U[k].balance = U[k].balance + T[a].sum;
+                        }
+                    }
+                }
+            }
+        }
+    }
+        laikinas.clear();
+        T.shrink_to_fit();
+        Tran.shrink_to_fit();
+
+        return Tran; 
+        
+}
+
+void transaction_deletion(std::vector<transaction> Tran, std::vector<transaction>& T) 
+{
+    int a = 0;
+    for(int i = 0; i < T.size()-1; i++)
+    {
+        for(int j = 0; j < Tran.size()-1; j++)
+        {
+            if(Tran[j].id == T[i].id)
+            {
+                        T.erase(T.begin()+i);
+                        T.shrink_to_fit();
+                        a++;
+            }          
+        }
+    }
+      
+}
+
+std::vector<block> single_block_gneration(block* &t,  int x, std::vector<transaction>& T, std::vector<user>& U)
+{   // std::vector<transaction> &A1,
+    std::vector<block> dievepadek;
+
+        for (int i = 0; i<5; i++)
+        {
+            std::vector<transaction> A1;
+            A1.clear();
+            A1 = transaction_validation(T, U); 
+            A1.shrink_to_fit();
+
+            t->version = "fist";
+            t->difficulty = x;
+            t->nonce = 0;
+
+            int64_t time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+            t->timestamp = time;
+            t->data = A1;
+
+            std::vector<std::string> v;
+            for(int j = 0; j < A1.size()-1; j++)
+            {
+                v.push_back(t->data[j].id);
+            }                           
+
+            std::vector<std::string> aha;
+            aha = merkle(v);
+
+            std::stringstream s;
+            std::for_each(std::begin(aha), std::end(aha), [&s](const std::string &elem) { s << elem; } );
+                
+            std::string labas;
+            labas = s.str();
+
+            t->merkel_root = labas;
+
+            dievepadek.push_back(*t);
+        }
+
+        return dievepadek;
+
+}
+
+void block_generation(block* &b, std::vector<transaction> &T, int x, int lo, std::vector<user> U)
 {
     if(!b)
     {
-            b = new block;
+        b = new block;
 
         b->version = "first";
         b->difficulty = x;
@@ -309,33 +427,75 @@ void block_generation(block* &b, std::vector<transaction> &T, int x, int lo)
         int64_t time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
         b->timestamp = time;
 
-        auto start = T.begin(); 
-        auto end = T.begin() + 100; 
-    
-        std::vector<transaction> Tran(100); 
-        //std::vector<transaction> T_data;  //ILGIAU UZTRUNKA
-        //T_data = slicing(T); 
-       // b->data = T_data;
-    
-        //copy(start, end, back_inserter(Tran)); 
-        copy(start, end, Tran.begin()); 
 
-            for(int i=0; i < 100; i++)
-            {
-                    T.erase(T.begin());
-            }
+        std::vector<transaction> Tran; 
+        Tran.clear();
 
+        Tran = transaction_validation(T, U);
         b->data = Tran;
 
-        std::string h = "";
-        for(int i = 0; i < 100; i++)
+        for(int i= 0; i<Tran.size()-1; i++)
         {
-            h += b->data[i].id;
+           // std::cout << i << "            "<< Tran[i].id << std::endl;
+        }
+        Tran.shrink_to_fit();
+
+
+        std::string h = "";
+         std::vector<std::string> v;
+        for(int i = 0; i < Tran.size()-1; i++)
+        {
+            v.push_back(b->data[i].id);
+          
         }                           
 
-        b->merkel_root = hash(h);
+        std::vector<std::string> aha;
+        aha = merkle(v);
+
+        std::stringstream s;
+        std::for_each(std::begin(aha), std::end(aha), [&s](const std::string &elem) { s << elem; } );
+   
+        std::string labas;
+        labas = s.str();
+
+        b->merkel_root = labas;
         b->prev_hash = "0";
+
+        char diff_target[x + 1];
+        for (int i = 0; i < x; ++i) 
+        {
+             diff_target[i] = '0';
+        }
+            diff_target[x] = '\0';
+
+        std::string a(diff_target);
+
+        std::string time_int, stringis, diff, next;
+        stringis = b->version + b->prev_hash + b->merkel_root;
+        time_int = static_cast<std::ostringstream*>( &(std::ostringstream() << b->timestamp) )->str();
+        diff = static_cast<std::ostringstream*>( &(std::ostringstream() << b->difficulty) )->str();
+
+        stringis.append(time_int);
+        stringis.append(diff); 
+
+        next = stringis;
+
+            do
+            {
+                                
+                b->nonce++;
+                std::string h = next + std::to_string(b->nonce);
+                b->hash = hash(h);
+
+            }while(b->hash.substr(0, x) != a);
+
+        std::cout << "block " << 1 << std::endl;
+        std::cout  << "hash  ->  " << b->hash <<  "     nonce   -> " << b->nonce << "     prev_hash     -> " << b->prev_hash << std::endl <<  std::endl;
+
         b->next = NULL;
+
+        transaction_deletion(Tran, T);
+
     }
 
     else
@@ -361,71 +521,84 @@ void block_generation(block* &b, std::vector<transaction> &T, int x, int lo)
             i++;
         }
 
-        t->version = "fist";
-        t->difficulty = x;
-        t->nonce = 0;
-
-        int64_t time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-        t->timestamp = time;
-
-        auto start = T.begin(); 
-        auto end = T.begin() + 100; 
-    
-         std::vector<transaction> Tran(100); 
-       // std::vector<transaction> T_data;
-        //T_data = slicing(T); 
-       // b->data = T_data;
-        // copy(start, end, back_inserter(Tran)); 
-
-        copy(start, end, Tran.begin());  
-
-        
-            for(int i=0; i < 100; i++)
-            {
-                    T.erase(T.begin());
-            }
-
-        t->data = Tran;
-
-
-        std::string h = "";
-        for(int i = 0; i < 100; i++)
-        {
-            h += t->data[i].id;
-        }                          
-
-        t->merkel_root = hash(h);
-
-            std::string next;
-        
-            std::string time_int, stringis, diff;
-            stringis = prev->version + prev->prev_hash + prev->merkel_root;
-            time_int = static_cast<std::ostringstream*>( &(std::ostringstream() << prev->timestamp) )->str();
-            diff = static_cast<std::ostringstream*>( &(std::ostringstream() << prev->difficulty) )->str();
-
-            stringis.append(time_int);
-            stringis.append(diff); 
-
-            next = stringis;
-
-
         char diff_target[x + 1];
         for (int i = 0; i < x; ++i) 
         {
-            diff_target[i] = '0';
+             diff_target[i] = '0';
         }
-        diff_target[x] = '\0';
+            diff_target[x] = '\0';
 
         std::string a(diff_target);
 
-        do
-        {
-            prev->nonce++;
-            std::string h = next + std::to_string(prev->nonce);
-            t->prev_hash = hash(h);
-        }while(t->prev_hash.substr(0, x) != a);
+        std::string next;
+                
+        std::vector<block> as = single_block_gneration(t, 2, T, U);
 
-        std::cout << "blokas " << lo-1 << "  " << t->prev_hash << std::endl;
+        
+        bool ar_pavyko = false;
+
+           do
+            { 
+                
+              int what;
+              std::uniform_int_distribution<unsigned> dist1(0, 4);
+              int counter = 0;
+              std::vector<int> howmany(5,0);
+              bool found = false;
+
+                    counter++;
+                    for(int i = 0; i < 5; i++)
+                    {
+                         what = dist1(gen);
+                         while(howmany[what] >= counter)
+                         {
+                              what = dist1(gen);
+                         }
+
+                         if(howmany[what] < counter)
+                         {
+                              howmany[what]++; 
+
+                              time_t start = std::time(0);
+                              time_t b1 = 5;
+
+                              as[what];
+
+                              t->prev_hash = prev->hash;
+
+                                std::string time_int, stringis, diff;
+                                stringis = t->version + t->prev_hash + t->merkel_root;
+                                time_int = static_cast<std::ostringstream*>( &(std::ostringstream() << t->timestamp) )->str();
+                                diff = static_cast<std::ostringstream*>( &(std::ostringstream() << t->difficulty) )->str();
+
+                                stringis.append(time_int);
+                                stringis.append(diff); 
+                                next = stringis;
+
+                              do
+                              {
+                                
+                                    t->nonce++;
+                                    std::string h = next + std::to_string(t->nonce);
+                                    t->hash = hash(h);
+
+                              }while(t->hash.substr(0, x) != a || difftime( std::time(0), start) < b1 );  
+                              
+                             if(t->hash.substr(0, x) == a )
+                             {
+                                 ar_pavyko = true;
+                                 transaction_deletion(t->data, T);
+                                 break;
+                             }      
+                         }
+                    }
+
+            }while(!ar_pavyko);
+      
+    
+
+        std::cout << "block " << lo << std::endl;
+        std::cout  << "hash  ->  " << t->hash <<  "     nonce   -> " << t->nonce << "     prev_hash     -> " << t->prev_hash << std::endl <<  std::endl;
         t->next = NULL;
     }
 }
@@ -433,21 +606,21 @@ void block_generation(block* &b, std::vector<transaction> &T, int x, int lo)
 int main()
 {
     Timer t;
-    int kiek = 5;
+    int kiek = 11;
 
     std::vector<user> U;
     net_users(U);
 
     std::vector<transaction> T;
-    T = transactions();
+    T = transactions(kiek, U);
 
-    std::cout <<  "generuojami "  << kiek-1 << "   blokai"<< "\n";
+    std::cout <<  "generating "  << kiek-1 << "   blocks"<< "\n";
 
     block* B = NULL;
     int i = 1;
     while(kiek)
     {
-        block_generation(B, T, 2, i);
+        block_generation(B, T, 2, i, U);
         i++;
         kiek --;
     }
@@ -457,7 +630,6 @@ int main()
     return 0;
 
 }
-
 
 
 

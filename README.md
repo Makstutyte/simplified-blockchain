@@ -1,6 +1,6 @@
 # simplified-blockchain
 
-Self-made blockchain version v0.1, 
+Self-made blockchain version v0.2, 
 program written in C++ 
 
 ## Installation instructions
@@ -36,16 +36,30 @@ To run the program code you need:
   * sender (users public key)
   * recipient (users public key)
   * sum
-* Generates a block with hundred transactions and adds it to the blockchain
+* Transaction verification
+  * It is secured that the same transaction is not repeated in the same block
+  * Balance check: if user A sends a certain amount to user B, but senders balance is less than the amount to be transfered, that transaction is deleted from the transaction pool
+  * Transaction hash check: it is checked whether the transaction information hash matches transaction ID, if not - the transaction is deleted from the transaction pool
+* Generates five potential block candidates with near hundred transactions
+  * When generating potencial block transactions are chosen randomly
+* Randomly selects one of the five generated potential block candidates and mines it until if fulfills Proof of Work quality within 5 seconds
+* If block is mined - it is added to the blockchain, if not the process is repeated with another randomly chosen potential block
+* When block is added used transactions are deleted from transaction pool 
 
 ### Generated block contains:
 * Block header
   * Previous Block Hash
+  * Current Block Hash
   * Timestamp
   * Version - version of the data structure used for the blocks (for example "first")
-  * Merkel Root Hash - NOT COMPLETED
+  * Merkel Root Hash
   * Nonce - a random number that has been used for a hash of the required complexity (defined by the number of consecutive zeros at the beginning)
   * Difficulty Target - defines numbers of previously mentioned zeros
   
-The provided version is in need for improvement by adding merkel root.
 
+ | Version | Amount of blocks |Time |
+| --------------- |  --------------- |--------------- |
+| v0.1 | 4 | 18.9175 s |
+| v0.2 | 4 | 66.1762 s |
+| v0.1 | 10 | 121.395 s |
+| v0.2 | 10 | 357.903 s |
