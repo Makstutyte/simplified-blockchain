@@ -303,46 +303,6 @@ std::vector<std::string> merkle(std::vector <std::string> &root_hash)
     return merkle(temp);
 }
 
-
-std::string create_merkle(std::vector<std::string>& merkle)
-{
-    // Stop if hash list is empty or contains one element
-    if (merkle.empty())
-        return "";
-    else if (merkle.size() == 1)
-        return merkle[0];
-
-    // While there is more than 1 hash in the list, keep looping...
-    while (merkle.size() > 1)
-    {
-        // If number of hashes is odd, duplicate last hash in the list.
-        if (merkle.size() % 2 != 0)
-            merkle.push_back(merkle.back());
-        // List size is now even.
-        assert(merkle.size() % 2 == 0);
-
-        // New hash list.
-        std::vector<std::string> new_merkle;
-        // Loop through hashes 2 at a time.
-        for (auto it = merkle.begin(); it != merkle.end(); it += 2)
-        {
-            // Join both current hashes together (concatenate).
-            std::string concat_data;
-            std::string concat;
-            concat += *it;
-            concat += (*(it + 1));
-            // Hash both of the hashes.
-            std::string new_root = hash(concat);
-            // Add this to the new list.
-            new_merkle.push_back(new_root);
-        }
-        // This is the new list.
-        merkle = new_merkle;
-    }
-    // Finally we end up with a single item.
-    return merkle[0];
-}
-/*
 bc::hash_digest create_merkle(bc::hash_list& merkle)
 {
     // Stop if hash list is empty or contains one element
@@ -377,15 +337,17 @@ bc::hash_digest create_merkle(bc::hash_list& merkle)
         // This is the new list.
         merkle = new_merkle;
         // DEBUG output -------------------------------------
-        std::cout << "Current merkle hash list:" << std::endl;
+      /*  
+	std::cout << "Current merkle hash list:" << std::endl;
         for (const auto& hash: merkle)
         std::cout << " " << bc::encode_base16(hash) << std::endl;
         std::cout << std::endl;
+      */
         // --------------------------------------------------
     }
     // Finally we end up with a single item.
     return merkle[0];
-}*/
+}
 
 std::vector<transaction> transaction_validation(std::vector<transaction>& T, std::vector<user>& U)
 {
@@ -457,7 +419,7 @@ void transaction_deletion(std::vector<transaction> Tran, std::vector<transaction
 }
 
 std::vector<block> single_block_gneration(block* &t,  int x, std::vector<transaction>& T, std::vector<user>& U)
-{   // std::vector<transaction> &A1,
+{   
     std::vector<block> dievepadek;
 
         for (int i = 0; i<5; i++)
@@ -475,42 +437,19 @@ std::vector<block> single_block_gneration(block* &t,  int x, std::vector<transac
             t->timestamp = time;
             t->data = A1;
 
-
-		std::vector<std::string> v;
-		for(int j = 0; j< A1.size()-1; j++)
-		{
-			v.push_back(t->data[j].id);
-		}
-
-
-	 std::string aha;		   
-	 aha = create_merkle(v);
-
-
-/*
-
-
-            bc::hash_list tx_hashes;
+            bc::hash_list tx_hashes{};
             for(int j = 0; j < A1.size()-1; j++)
             {
-                tx_hashes.push_back(bc::hash_literal(A1[j].id));
+		char id[65];
+		A1[j].id.copy(id, 65);
+                tx_hashes.push_back(bc::hash_literal(id));
             }                        
 
-    const bc::hash_digest merkle_root = create_merkle(tx_hashes);
-    std::cout << "Merkle Root Hash: " << bc::encode_base16(merkle_root) << std::endl;
-    std::cout << "Merkle Root Hash-2: " << bc::encode_hash(merkle_root) << std::endl;
+    const std::string merkle_root = bc::encode_base16(create_merkle(tx_hashes));
+    //std::cout << "Merkle Root Hash: " << merkle_root << std::endl;
 
-*/
-
-
-
-           /* std::stringstream s;
-            std::for_each(std::begin(aha), std::end(aha), [&s](const std::string &elem) { s << elem; } );
-                
-            std::string labas;
-            labas = s.str();*/
-
-            t->merkel_root = aha;
+	    
+            t->merkel_root = merkle_root;
 
             dievepadek.push_back(*t);
         }
@@ -539,31 +478,23 @@ void block_generation(block* &b, std::vector<transaction> &T, int x, int lo, std
         Tran = transaction_validation(T, U);
         b->data = Tran;
 
-        for(int i= 0; i<Tran.size()-1; i++)
-        {
-           // std::cout << i << "            "<< Tran[i].id << std::endl;
-        }
         Tran.shrink_to_fit();
 
 
-        std::string h = "";
-         std::vector<std::string> v;
-        for(int i = 0; i < Tran.size()-1; i++)
-        {
-            v.push_back(b->data[i].id);
-          
-        }                           
+            bc::hash_list tx_hashes{};
+            for(int j = 0; j < Tran.size()-1; j++)
+            {
+		char id[65];
+		Tran[j].id.copy(id, 65);
+                tx_hashes.push_back(bc::hash_literal(id));
+            }                        
 
-        std::vector<std::string> aha;
-        aha = merkle(v);
+    const std::string merkle_root = bc::encode_base16(create_merkle(tx_hashes));
+   // std::cout << "Merkle Root Hash: " << merkle_root << std::endl;
+	    
+            b->merkel_root = merkle_root;
 
-        std::stringstream s;
-        std::for_each(std::begin(aha), std::end(aha), [&s](const std::string &elem) { s << elem; } );
-   
-        std::string labas;
-        labas = s.str();
 
-        b->merkel_root = labas;
         b->prev_hash = "0";
 
         char diff_target[x + 1];
@@ -595,7 +526,8 @@ void block_generation(block* &b, std::vector<transaction> &T, int x, int lo, std
             }while(b->hash.substr(0, x) != a);
 
         std::cout << "block " << 1 << std::endl;
-        std::cout  << "hash  ->  " << b->hash <<  "     nonce   -> " << b->nonce << "     prev_hash     -> " << b->prev_hash << std::endl <<  std::endl;
+        std::cout << "hash            ->  " << b->hash <<  "     nonce   -> " << b->nonce << "     prev_hash     -> " << b->prev_hash <<  std::endl << "merkle_root     -> " << b->merkel_root <<  std::endl;
+	std::cout << std::endl;
 
         b->next = NULL;
 
@@ -703,7 +635,8 @@ void block_generation(block* &b, std::vector<transaction> &T, int x, int lo, std
     
 
         std::cout << "block " << lo << std::endl;
-        std::cout  << "hash  ->  " << t->hash <<  "     nonce   -> " << t->nonce << "     prev_hash     -> " << t->prev_hash << std::endl <<  std::endl;
+        std::cout << "hash            ->  " << t->hash <<  "     nonce   -> " << t->nonce << "     prev_hash     -> " << t->prev_hash << std::endl << "merkle_root     -> " << t->merkel_root <<   std::endl;
+	std::cout << std::endl;
         t->next = NULL;
     }
 }
@@ -720,6 +653,7 @@ int main()
     T = transactions(kiek, U);
 
     std::cout <<  "generating "  << kiek << "   blocks"<< "\n";
+    std::cout << std::endl;
 
     block* B = NULL;
     int i = 1;
@@ -729,28 +663,9 @@ int main()
         i++;
         kiek --;
     }
-
-    std::cout <<  t.elapsed() << " s\n";/*
-
-            std::vector<transaction> A1;
-            A1.clear();
-            A1 = transaction_validation(T, U); 
-
-
-	bc::hash_list tx_hashes;
-	 for(int j = 0; j < A1.size()-1; j++)
-		{
-
-			 tx_hashes(bc::hash_literal(&A1[j].id));
-		}
 	
+    std::cout <<  t.elapsed() << " s\n";
 
-    const bc::hash_digest merkle_root = create_merkle(tx_hashes);
-    std::cout << "Merkle Root Hash: " << bc::encode_base16(merkle_root) << std::endl;
-     std::cout << "Merkle Root Hash-2: " << bc::encode_hash(merkle_root) << std::endl;
-
-*/
     return 0;
 
 }
-
