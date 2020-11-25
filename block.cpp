@@ -446,8 +446,6 @@ std::vector<block> single_block_gneration(block* &t,  int x, std::vector<transac
             }                        
 
     const std::string merkle_root = bc::encode_base16(create_merkle(tx_hashes));
-    //std::cout << "Merkle Root Hash: " << merkle_root << std::endl;
-
 	    
             t->merkel_root = merkle_root;
 
@@ -490,7 +488,6 @@ void block_generation(block* &b, std::vector<transaction> &T, int x, int lo, std
             }                        
 
     const std::string merkle_root = bc::encode_base16(create_merkle(tx_hashes));
-   // std::cout << "Merkle Root Hash: " << merkle_root << std::endl;
 	    
             b->merkel_root = merkle_root;
 
