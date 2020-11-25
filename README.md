@@ -1,7 +1,7 @@
 # simplified-blockchain
 
-Self-made blockchain version v0.2, 
-program written in C++ 
+Self-made blockchain version v0.3 with implemented Merkle tree function create_merkle() from libbitcoin.  
+Program written in C++ 
 
 ## Installation instructions
 To run the program code you need:
@@ -57,9 +57,12 @@ To run the program code you need:
   * Difficulty Target - defines numbers of previously mentioned zeros
   
 
+
  | Version | Amount of blocks |Time |
 | --------------- |  --------------- |--------------- |
 | v0.1 | 4 | 18.9175 s |
 | v0.2 | 4 | 66.1762 s |
+| v0.3 | 4 | 85.4312 s |
 | v0.1 | 10 | 121.395 s |
 | v0.2 | 10 | 357.903 s |
+| v0.3 | 10 | 462.1187 s |
