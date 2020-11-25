@@ -52,11 +52,10 @@ To run the program code you need:
   * Current Block Hash
   * Timestamp
   * Version - version of the data structure used for the blocks (for example "first")
-  * Merkel Root Hash
+  * Merkle Root Hash
   * Nonce - a random number that has been used for a hash of the required complexity (defined by the number of consecutive zeros at the beginning)
   * Difficulty Target - defines numbers of previously mentioned zeros
   
-
 
  | Version | Amount of blocks |Time |
 | --------------- |  --------------- |--------------- |
@@ -66,3 +65,12 @@ To run the program code you need:
 | v0.1 | 10 | 121.395 s |
 | v0.2 | 10 | 357.903 s |
 | v0.3 | 10 | 462.1187 s |
+
+
+### Merkle function test files
+* file merkle.cpp calculates merkle root hash from block (#100 000) transactions  
+  * output → 6657a9252aacd5c0b2940996ecff952228c3067cc38d4885efb5a4ac4247e9f3
+* file merkle1.cpp calculates merkle root hash from block (#95 000) transactions  
+  * output → bb9f3f5820a7cb932f8799ed933afabd0598ddc6962eb3cdc0249d9a7948ae94
+* file merkle2.cpp calculates merkle root hash from block (#1000) transactions  
+  * output → 338f121232e169d3100edd82004dc2a1f0e1f030c6c488fa61eafa930b0528fe
