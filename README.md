@@ -10,21 +10,14 @@ To run the program code you need:
 2. Install the C ++ compiler
  <br />[GCC](https://gcc.gnu.org/)
 3. Find the location of the program code (directory) using the command line
-
-### If using Makefile:
-
 4. Compile program code using
-   <br /> `make` 
-5. Run the program code using
-   <br /> `test` 
+   <br /> `g++ -std=c++11 -o block block.cpp $(pkg-config --cflags --libs libbitcoin)` 
    
-### If not using Makefile:
-
-4. Compile program code using
-   <br /> `g++ -c block.cpp` 
-   <br /> `g++ -o test block.o` 
+   or
+   <br /> `clang++ -std=c++11 -o block block.cpp $(pkg-config --cflags --libs libbitcoin)` 
 5. Run the program code using
-   <br /> `test` 
+   <br /> `./block` 
+
 
 ### The written program performs the following actions:
 * Generates ~ 1000 network users with three attributes:
