@@ -8,7 +8,8 @@ To run the program code you need:
 
 1. Download the program code
 2. Install the C ++ compiler
- <br />[GCC](https://gcc.gnu.org/)
+  <br /> `sudo apt-get update`
+  <br /> `sudo apt-get install build-essential manpages-dev`
 3. Find the location of the program code (directory) using the command line
 4. Compile program code using
    <br /> `g++ -std=c++11 -o block block.cpp $(pkg-config --cflags --libs libbitcoin)` 
